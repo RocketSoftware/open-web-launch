@@ -1,0 +1,3 @@
+package jnlp
+
+const ClassPathSeparator = ";"
