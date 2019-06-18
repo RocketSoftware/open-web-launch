@@ -7,6 +7,7 @@ import (
 	"image/draw"
 	"image/png"
 	"io"
+	"os"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -55,4 +56,19 @@ func LoadPngImage(reader io.Reader) (rgbaImage *image.RGBA, err error) {
 
 func QuoteString(s string) string {
 	return `"` + s + `"`
+}
+
+func CreateProductWorkDir(productWorkDir string) error {
+	if _, err := os.Stat(productWorkDir); os.IsNotExist(err) {
+		err = os.MkdirAll(productWorkDir, 0755)
+		if err != nil {
+			return errors.Wrapf(err, "unable to create product working directory %q", productWorkDir)
+		}
+	}
+	return nil
+}
+
+func OpenOrCreateProductLogFile(productLogFile string) (*os.File, error) {
+	return os.OpenFile(productLogFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+
 }
