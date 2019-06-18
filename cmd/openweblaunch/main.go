@@ -1,9 +1,8 @@
 package main
 
 import (
-
-	_ "github.com/rocketsoftware/open-web-launch/launcher/jnlp"
 	"github.com/rocketsoftware/open-web-launch/bootstrap"
+	_ "github.com/rocketsoftware/open-web-launch/launcher/jnlp"
 )
 
 //go:generate goversioninfo -o openweblaunch.syso
@@ -13,9 +12,7 @@ const (
 	productTitle = "Open Web Launch"
 )
 
-var (
-	productVersion = "Dummy version number"
-)
+var productVersion = "Dummy version number"
 
 func main() {
 	bootstrap.Run(productName, productTitle, productVersion)

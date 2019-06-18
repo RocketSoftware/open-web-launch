@@ -11,11 +11,10 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/rocketsoftware/open-web-launch/java"
-	"github.com/rocketsoftware/open-web-launch/utils"
 	"github.com/rocketsoftware/open-web-launch/launcher"
 	"github.com/rocketsoftware/open-web-launch/messaging"
+	"github.com/rocketsoftware/open-web-launch/utils"
 )
-
 
 func Run(productName, productTitle, productVersion string) {
 	productWorkDir := filepath.Join(os.TempDir(), productName)
