@@ -1,8 +1,10 @@
 package utils
 
 import (
+	"archive/zip"
 	"crypto/sha256"
 	"encoding/base64"
+	"io"
 	"log"
 	"net/url"
 	"os"
@@ -92,4 +94,50 @@ func AreResourcesRelevantForCurrentPlatform(os string, arch string) bool {
 		}
 	}
 	return false
+}
+
+// Extract unpacks zip archive zipFilename into directory dir
+func Extract(zipFilename string, dir string) error {
+	absPath, err := filepath.Abs(dir)
+	if err != nil {
+		return err
+	}
+	absPathWithSeparator := absPath +string(os.PathSeparator)
+	if err := os.RemoveAll(dir); err != nil {
+		return errors.Wrapf(err, "unable to cleanup directory %s before extracting files", absPath)
+	}
+	archiveReader, err := zip.OpenReader(zipFilename)
+	if err != nil {
+		return err
+	}
+	defer archiveReader.Close()
+	for _, archiveFile := range archiveReader.File {
+		filePath := filepath.Join(absPath, archiveFile.Name)
+		// protection against ZipSlip attack: https://snyk.io/research/zip-slip-vulnerability#go
+		if !strings.HasPrefix(filePath, absPathWithSeparator) {
+			return errors.Errorf("%s: illegal path found in archive", filePath)
+		}
+		if archiveFile.FileInfo().IsDir() {
+			os.MkdirAll(filePath, os.ModePerm)
+			continue
+		}
+		if err := os.MkdirAll(filepath.Dir(filePath), os.ModePerm); err != nil {
+			return err
+		}
+		outFile, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, archiveFile.Mode())
+		if err != nil {
+			return err
+		}
+		fp, err := archiveFile.Open()
+		if err != nil {
+			return err
+		}
+		_, err = io.Copy(outFile, fp)
+		outFile.Close()
+		fp.Close()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

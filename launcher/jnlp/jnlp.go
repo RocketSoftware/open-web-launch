@@ -31,10 +31,21 @@ type Resources struct {
 	Properties []Property   `xml:"property,omitempty"`
 	Extensions []*Extension `xml:"extension,omitempty"`
 	J2SE       *J2SE        `xml:"j2se,omitempty"`
+	NativeLibs []*NativeLib `xml:"nativelib,omitempty"`
 }
 
 // JAR file that is part of the application's classpath
 type JAR struct {
+	Href     string `xml:"href,attr"`               // URL of the jar file
+	Version  string `xml:"version,attr,omitempty"`  // The requested version of the jar file. Requires using the version-based download protocol
+	Main     bool   `xml:"main,attr,omitempty"`     // Indicates if this JAR file contains the class containing the main method of the RIA
+	Download string `xml:"download,attr,omitempty"` // Indicates that this JAR file can be downloaded lazily, or when needed
+	Size     int64  `xml:"size,attr,omitempty"`     // The downloadable size of the JAR file in bytes
+	Part     bool   `xml:"part,attr,omitempty"`     // Can be used to group resources together so that they are downloaded at the same time
+}
+
+// NativeLib is a JAR file that contains native libraries in its root directory.
+type NativeLib struct {
 	Href     string `xml:"href,attr"`               // URL of the jar file
 	Version  string `xml:"version,attr,omitempty"`  // The requested version of the jar file. Requires using the version-based download protocol
 	Main     bool   `xml:"main,attr,omitempty"`     // Indicates if this JAR file contains the class containing the main method of the RIA
@@ -182,6 +193,26 @@ func (jnlp *JNLP) getJars() ([]string, error) {
 	relevantResources := jnlp.findRelevantResources()
 	for _, resources := range relevantResources {
 		for _, jar := range resources.JARs {
+			url, err := url.Parse(jar.Href)
+			if err != nil {
+				continue
+			}
+			abs := codebaseURL.ResolveReference(url)
+			urls = append(urls, abs.String())
+		}
+	}
+	return urls, nil
+}
+
+func (jnlp *JNLP) getNativeLibs() ([]string, error) {
+	var urls []string
+	codebaseURL, err := launcher_utils.ParseCodebaseURL(jnlp.CodeBase)
+	if err != nil {
+		return nil, err
+	}
+	relevantResources := jnlp.findRelevantResources()
+	for _, resources := range relevantResources {
+		for _, jar := range resources.NativeLibs {
 			url, err := url.Parse(jar.Href)
 			if err != nil {
 				continue
