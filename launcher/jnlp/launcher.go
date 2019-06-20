@@ -574,8 +574,12 @@ func (launcher *Launcher) estimateProgressMax() error {
 	if err != nil {
 		return err
 	}
+	nativeLibJars, err := launcher.getNativeLibs()
+	if err != nil {
+		return err
+	}
 	extensionJars := launcher.getExtensionJars()
-	progressMax := 3*(len(jars)) + len(extensionJars) + 1
+	progressMax := 3*(len(jars) + len(nativeLibJars)) + len(extensionJars) + 1
 	launcher.gui.SetProgressMax(progressMax)
 	return nil
 }
