@@ -152,6 +152,10 @@ func (launcher *Launcher) getJars() ([]string, error) {
 	return launcher.jnlp.getJars()
 }
 
+func (launcher *Launcher) getNativeLibs() ([]string, error) {
+	return launcher.jnlp.getNativeLibs()
+}
+
 func (launcher *Launcher) getExtensions() ([]*Extension, error) {
 	var extensions []*Extension
 	codebaseURL, err := launcher.getCodebaseURL()
@@ -229,6 +233,17 @@ func (launcher *Launcher) command() (*exec.Cmd, error) {
 	extensionJars := launcher.getExtensionJars()
 	javaArgs := launcher.getJVMArgs()
 	var args []string
+	nativelibs, err := launcher.getNativeLibs()
+	if err != nil {
+		return nil, err
+	}
+	var nativeLibPaths []string
+	for _, nativelib := range nativelibs {
+		filename := path.Base(nativelib)
+		filenameWithoutExt := strings.TrimSuffix(filename, path.Ext(filename))
+		path := filepath.Join(launcher.resourceDir, filenameWithoutExt)
+		nativeLibPaths = append(nativeLibPaths, path)
+	}
 	for _, jar := range jars {
 		args = append(args, filepath.Join(launcher.resourceDir, path.Base(jar)))
 	}
@@ -239,6 +254,9 @@ func (launcher *Launcher) command() (*exec.Cmd, error) {
 	properties := launcher.getProperties()
 	for _, property := range properties {
 		javaArgs = append(javaArgs, fmt.Sprintf("-D%s=%s", property.Name, property.Value))
+	}
+	if len(nativeLibPaths) > 0 {
+		javaArgs = append(javaArgs, fmt.Sprintf("-Djava.library.path=%s", strings.Join(nativeLibPaths, ClassPathSeparator)))
 	}
 	if splash := launcher.getSplashScreen(); splash != "" {
 		javaArgs = append(javaArgs, fmt.Sprintf("-splash:%s", splash))
@@ -255,7 +273,6 @@ func (launcher *Launcher) command() (*exec.Cmd, error) {
 	}
 	log.Printf("java arguments %s\n", strings.Join(javaArgs, " "))
 	cmd := exec.Command(java.Java(), javaArgs...)
-	utils.HideJavaWindowIfNeeded(cmd)
 	if launcher.options != nil && launcher.options.IsRunningFromBrowser {
 		utils.BreakAwayFromParent(cmd)
 	}
@@ -291,6 +308,9 @@ func (launcher *Launcher) run(filedata []byte) error {
 		return err
 	}
 	if err := launcher.downloadJARs(); err != nil {
+		return err
+	}
+	if err := launcher.extractNativeLibs(); err != nil {
 		return err
 	}
 	if err := launcher.downloadExtensions(); err != nil {
@@ -357,6 +377,11 @@ func (launcher *Launcher) downloadJARs() error {
 	if err != nil {
 		return err
 	}
+	nativeLibJars, err := launcher.getNativeLibs()
+	if err != nil {
+		return err
+	}
+	jars = append(jars, nativeLibJars...)	
 	jarDir, err := launcher.createDirForResourceFiles()
 	if err != nil {
 		return errors.Wrapf(err, "unable to create directory for jar files")
@@ -517,13 +542,43 @@ func (launcher *Launcher) downloadExtensions() error {
 	return nil
 }
 
+func (launcher *Launcher) extractNativeLibs() error {
+	nativeLibJars, err := launcher.getNativeLibs()
+	if err != nil {
+		return err
+	}
+	jarDir := launcher.resourceDir
+	for _, url := range nativeLibJars {
+		if launcher.gui.Closed() {
+			return errCancelled
+		}
+		log.Printf("extracting Nativelib %s\n", path.Base(url))
+		filename := path.Base(url)
+		filenameWithoutExt := strings.TrimSuffix(filename, path.Ext(filename))
+		dir := filepath.Join(jarDir, filenameWithoutExt)
+		zipFilename := filepath.Join(launcher.resourceDir, path.Base(url))
+		launcher.gui.SendTextMessage(fmt.Sprintf("Extracting Nativelib %s\n", path.Base(url)))
+		if err := launcher_utils.Extract(zipFilename, dir); err != nil {
+			return errors.Wrapf(err, "extracting nativelib %s", path.Base(url))
+		}
+	}
+	if launcher.gui.Closed() {
+		return errCancelled
+	}
+	return nil
+}
+
 func (launcher *Launcher) estimateProgressMax() error {
 	jars, err := launcher.getJars()
 	if err != nil {
 		return err
 	}
+	nativeLibJars, err := launcher.getNativeLibs()
+	if err != nil {
+		return err
+	}
 	extensionJars := launcher.getExtensionJars()
-	progressMax := 3*(len(jars)) + len(extensionJars) + 1
+	progressMax := 3*(len(jars) + len(nativeLibJars)) + len(extensionJars) + 1
 	launcher.gui.SetProgressMax(progressMax)
 	return nil
 }
