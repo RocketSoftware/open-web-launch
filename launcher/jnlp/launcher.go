@@ -273,7 +273,6 @@ func (launcher *Launcher) command() (*exec.Cmd, error) {
 	}
 	log.Printf("java arguments %s\n", strings.Join(javaArgs, " "))
 	cmd := exec.Command(java.Java(), javaArgs...)
-	utils.HideJavaWindowIfNeeded(cmd)
 	if launcher.options != nil && launcher.options.IsRunningFromBrowser {
 		utils.BreakAwayFromParent(cmd)
 	}
