@@ -173,6 +173,9 @@ If none of the other options result in a Java version that it can use, Open Web 
 | | |arch|amd64, x86|
 | |jar| | |
 | | |href| |
+| |nativelib| | |
+| | |href| |
+| | |name| |
 | **extension**| | | |
 | | |href| |
 | | |name| |
