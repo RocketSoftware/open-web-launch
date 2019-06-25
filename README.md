@@ -176,7 +176,7 @@ If none of the other options result in a Java version that it can use, Open Web 
 | |nativelib| | |
 | | |href| |
 | | |name| |
-| **extension**| | | |
+| |extension| | |
 | | |href| |
 | | |name| |
 | | |version| |
