@@ -7,12 +7,11 @@ import (
 
 //go:generate goversioninfo -o openweblaunch.syso
 
-const (
-	productName  = "openweblaunch"
-	productTitle = "Open Web Launch"
+var (
+	productName    = "openweblaunch"
+	productTitle   = "Open Web Launch"
+	productVersion = "Dummy version number"
 )
-
-var productVersion = "Dummy version number"
 
 func main() {
 	bootstrap.Run(productName, productTitle, productVersion)
