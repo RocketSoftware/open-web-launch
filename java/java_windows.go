@@ -6,7 +6,7 @@ import (
 	"golang.org/x/sys/windows/registry"
 )
 
-const registryKey = `Software\Rocket Software\Open Web Launch`
+var registryKey = `Software\Rocket Software\Open Web Launch`
 
 func getStringValueFromRootKey(rootKey registry.Key, key string) (string, error) {
 	registryKey, err := registry.OpenKey(rootKey, registryKey, registry.QUERY_VALUE)
