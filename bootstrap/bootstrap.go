@@ -2,6 +2,7 @@ package bootstrap
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io"
 	"log"
@@ -14,6 +15,12 @@ import (
 	"github.com/rocketsoftware/open-web-launch/launcher"
 	"github.com/rocketsoftware/open-web-launch/messaging"
 	"github.com/rocketsoftware/open-web-launch/utils"
+)
+
+var (
+	javaDir string
+	showConsole bool
+	uninstall bool
 )
 
 func Run(productName, productTitle, productVersion string) {
@@ -31,19 +38,33 @@ func Run(productName, productTitle, productVersion string) {
 	log.SetOutput(logFile)
 	log.Printf("starting %s %s with arguments %v\n", productTitle, productVersion, os.Args)
 	log.Printf("current platform is OS=%q Architecture=%q\n", runtime.GOOS, runtime.GOARCH)
-	if len(os.Args) == 2 {
-		filenameOrURL := os.Args[1]
+	flag.BoolVar(&showConsole, "showconsole", false, "show Java console")
+	flag.StringVar(&javaDir, "javadir", "", "Java folder that should be used for starting a Java Web Start application")
+	flag.BoolVar(&uninstall, "uninstall", false, "uninstall a specific Java Web Start application")
+	flag.Parse()
+	fmt.Println("uninstall has value ", uninstall)
+	fmt.Println("showConsole has value ", showConsole)
+	fmt.Println("javaDir has value ", javaDir)
+	fmt.Println("narg has value ", flag.NArg())
+	fmt.Println("nflags has value ", flag.NFlag())
+	nargs := flag.NArg()
+	nflags := flag.NFlag()
+	if nargs == 1 && nflags == 0 {
+		filenameOrURL := flag.Arg(0)
 		handleURLOrFilename(filenameOrURL, nil, productWorkDir, productTitle)
-	} else if len(os.Args) == 3 && os.Args[1] == "-uninstall" {
-		handleUninstallCommand(productWorkDir, productTitle)
-	} else if len(os.Args) == 4 && os.Args[1] == "-javadir" {
-		javaDir := os.Args[2]
-		filenameOrURL := os.Args[3]
-		var err error
-		if javaDir, err = java.UseJavaDir(javaDir); err != nil {
-			log.Fatal(err)
+	} else if nargs == 1 && uninstall {
+		filenameOrURL := flag.Arg(0)
+		handleUninstallCommand(filenameOrURL, productWorkDir, productTitle)
+	} else if nargs == 1 {
+		filenameOrURL := flag.Arg(0)
+		options := &launcher.Options{}
+		if javaDir != "" {
+			var err error
+			if javaDir, err = java.UseJavaDir(javaDir); err != nil {
+				log.Fatal(err)
+			}
+			options.JavaDir = javaDir
 		}
-		options := &launcher.Options{JavaDir: javaDir}
 		handleURLOrFilename(filenameOrURL, options, productWorkDir, productTitle)
 	} else {
 		isRunningFromBrowser := len(os.Args) > 2
@@ -121,9 +142,7 @@ func listenForMessage(options *launcher.Options, productWorkDir string, productT
 	}
 }
 
-func handleUninstallCommand(productWorkDir string, productTitle string) {
-	_ = os.Args[1] // -uninstall
-	filenameOrURL := os.Args[2]
+func handleUninstallCommand(filenameOrURL string, productWorkDir string, productTitle string) {
 	myLauncher, byURL, err := launcher.FindLauncherForURLOrFilename(filenameOrURL)
 	if err != nil {
 		log.Fatal(err)
