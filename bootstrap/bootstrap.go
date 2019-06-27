@@ -42,11 +42,6 @@ func Run(productName, productTitle, productVersion string) {
 	flag.StringVar(&javaDir, "javadir", "", "Java folder that should be used for starting a Java Web Start application")
 	flag.BoolVar(&uninstall, "uninstall", false, "uninstall a specific Java Web Start application")
 	flag.Parse()
-	fmt.Println("uninstall has value ", uninstall)
-	fmt.Println("showConsole has value ", showConsole)
-	fmt.Println("javaDir has value ", javaDir)
-	fmt.Println("narg has value ", flag.NArg())
-	fmt.Println("nflags has value ", flag.NFlag())
 	nargs := flag.NArg()
 	nflags := flag.NFlag()
 	if nargs == 1 && nflags == 0 {
@@ -58,12 +53,16 @@ func Run(productName, productTitle, productVersion string) {
 	} else if nargs == 1 {
 		filenameOrURL := flag.Arg(0)
 		options := &launcher.Options{}
-		if javaDir != "" {
+		if isFlagSet("javadir") {
 			var err error
 			if javaDir, err = java.UseJavaDir(javaDir); err != nil {
 				log.Fatal(err)
 			}
 			options.JavaDir = javaDir
+		}
+		if isFlagSet("showconsole") {
+			java.ShowConsole()
+			options.ShowConsole = true
 		}
 		handleURLOrFilename(filenameOrURL, options, productWorkDir, productTitle)
 	} else {
@@ -160,4 +159,15 @@ func handleUninstallCommand(filenameOrURL string, productWorkDir string, product
 			return
 		}
 	}
+}
+
+
+func isFlagSet(flagName string) bool {
+	found := false
+    flag.Visit(func(f *flag.Flag) {
+        if f.Name == flagName {
+            found = true
+        }
+    })
+    return found
 }

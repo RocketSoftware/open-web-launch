@@ -677,6 +677,9 @@ func (launcher *Launcher) getShortcutArguments() []string {
 		arguments = append(arguments, "-javadir")
 		arguments = append(arguments, launcher.options.JavaDir)
 	}
+	if launcher.options != nil && launcher.options.ShowConsole {
+		arguments = append(arguments, "-showconsole")
+	}
 	arguments = append(arguments, launcher.getOriginalFilePath())
 	return arguments
 }
