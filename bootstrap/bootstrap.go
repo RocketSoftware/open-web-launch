@@ -23,7 +23,17 @@ var (
 	uninstall bool
 )
 
+var helpOptions = []string{"-help", "--help", "/help", "-?", "/?"}
+
 func Run(productName, productTitle, productVersion string) {
+	if len(os.Args) > 0 {
+		for _, helpOption := range helpOptions {
+			if helpOption == os.Args[1] {
+				showUsage(productTitle, productVersion)
+				os.Exit(1)
+			}
+		}
+	}
 	productWorkDir := filepath.Join(os.TempDir(), productName)
 	productLogFile := filepath.Join(productWorkDir, productName+".log")
 	fmt.Fprintf(os.Stderr, "%s %s\n", productTitle, productVersion)
@@ -170,4 +180,24 @@ func isFlagSet(flagName string) bool {
         }
     })
     return found
+}
+
+func buildUsageText(productTitle, productVersion string) string {
+	program := filepath.Base(os.Args[0])
+	var text string
+	text += fmt.Sprintf("%s %s\n", productTitle, productVersion)
+	text += fmt.Sprintf("\n")
+	text += fmt.Sprintf("Usage:\n")
+	text += fmt.Sprintf("  %s [options] <filename or URL>\n", program)
+	text += fmt.Sprintf("  Options are:\n")
+	text += fmt.Sprintf("    -javadir <directory> - use Java installation from <directory>\n")
+	text += fmt.Sprintf("    -showconsole - show Java console\n")
+	text += fmt.Sprintf("    -uninstall - uninstall app\n")
+	text += fmt.Sprintf("    -help - show help\n")
+	return text
+}
+
+func showUsage(productTitle, productVersion string) {
+	text := buildUsageText(productTitle, productVersion)
+	utils.ShowUsage(productTitle, productVersion, text)
 }
