@@ -118,6 +118,18 @@ This command allows to pass a specific Java that should be used for starting a J
 
 `openweblaunch.exe -javadir <java folder> <jnlp reference>`
 
+**-ShowConsole**
+
+This command allows show Java console when a Java Web Start application is running.
+
+`openweblaunch.exe -showconsole <jnlp reference>`
+
+**-Help**
+
+This command allows to show usage information.
+
+`openweblaunch.exe -help`
+
 ## Appendix
 
 ### Frequently Asked Questions
@@ -139,9 +151,10 @@ Open Web Launch will check for changes between remote and local JNLP files and r
 
 This is the order by which Open Web Launch determines what Java executable it will use to run a Java Web Start application:
 
-**Command line**
+**Command line options**
 
-When `-JavaDir` is specified on the command line, this is the version of Java which will be used.
+-  When `-javadir <java folder>` is specified, Java installation from `<java folder>` will be used.
+-  When `-showconsole` is specified, Java console will be shown when app is running.
 
 **JAVA_HOME**
 

@@ -190,7 +190,7 @@ func buildUsageText(productTitle, productVersion string) string {
 	text += fmt.Sprintf("Usage:\n")
 	text += fmt.Sprintf("  %s [options] <filename or URL>\n", program)
 	text += fmt.Sprintf("  Options are:\n")
-	text += fmt.Sprintf("    -javadir <directory> - use Java installation from <directory>\n")
+	text += fmt.Sprintf("    -javadir <java folder> - use Java from <java folder>\n")
 	text += fmt.Sprintf("    -showconsole - show Java console\n")
 	text += fmt.Sprintf("    -uninstall - uninstall app\n")
 	text += fmt.Sprintf("    -help - show help\n")
