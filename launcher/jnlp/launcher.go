@@ -138,6 +138,7 @@ func (launcher *Launcher) CheckPlatform() error {
 		return errors.Wrap(err, "unable to obtain java version")
 	}
 	log.Println(javaVersion)
+	log.Printf("DisableVerification is %v", java.IsVerificationDisabled())
 	return nil
 }
 
@@ -413,12 +414,14 @@ func (launcher *Launcher) downloadJARs() error {
 			if launcher.gui.Closed() {
 				return
 			}
-			if err := verifier.VerifyWithJARSigner(filename, false); err != nil {
-				errChan <- errors.Wrapf(err, "JAR verification failed %s", filepath.Base(filename))
-				return
+			if !java.IsVerificationDisabled() {
+				if err := verifier.VerifyWithJARSigner(filename, false); err != nil {
+					errChan <- errors.Wrapf(err, "JAR verification failed %s", filepath.Base(filename))
+					return
+				}
+				launcher.gui.SendTextMessage(fmt.Sprintf("Checking JAR %s finished\n", path.Base(url)))
 			}
 			launcher.gui.ProgressStep()
-			launcher.gui.SendTextMessage(fmt.Sprintf("Checking JAR %s finished\n", path.Base(url)))
 			if launcher.gui.Closed() {
 				return
 			}

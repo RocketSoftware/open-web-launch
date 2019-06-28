@@ -50,6 +50,10 @@ func getShowConsoleSettingFromRootKey(rootKey registry.Key) (uint64, error) {
 	return getUInt64ValueFromRootKey(rootKey, "ShowConsole")
 }
 
+func getDisableVerificationSettingFromRootKey(rootKey registry.Key) (uint64, error) {
+	return getUInt64ValueFromRootKey(rootKey, "DisableVerification")
+}
+
 func getJavaDetectionStrategy() string {
 	strategy, err := getJavaDetectionStrategyFromRootKey(registry.CURRENT_USER)
 	if err != nil {
@@ -59,6 +63,17 @@ func getJavaDetectionStrategy() string {
 		strategy = ""
 	}
 	return strategy
+}
+
+func getDisableVerificationSetting() bool {
+	disableVerification, err := getDisableVerificationSettingFromRootKey(registry.CURRENT_USER)
+	if err != nil {
+		disableVerification, err = getDisableVerificationSettingFromRootKey(registry.LOCAL_MACHINE)
+	}
+	if err != nil {
+		return false
+	}
+	return disableVerification == 1
 }
 
 func getShowConsoleSetting() bool {
