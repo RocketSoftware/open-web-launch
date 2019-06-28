@@ -119,6 +119,14 @@ func UseJavaDir(dir string) (string, error) {
 	return absPath, nil
 }
 
+func ShowConsole() {
+	if runtime.GOOS == "windows" && javaExecutable != "" {
+		javaDir := filepath.Dir(javaExecutable)
+		javaExecutable = filepath.Join(javaDir, "java.exe")
+	}
+}
+
+
 func init() {
 	javaExecutable = getJavaExecutable()
 	jarSignerExecutable = getJARSignerExecutable()

@@ -2,6 +2,7 @@ package bootstrap
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io"
 	"log"
@@ -16,7 +17,23 @@ import (
 	"github.com/rocketsoftware/open-web-launch/utils"
 )
 
+var (
+	javaDir string
+	showConsole bool
+	uninstall bool
+)
+
+var helpOptions = []string{"-help", "--help", "/help", "-?", "/?"}
+
 func Run(productName, productTitle, productVersion string) {
+	usage := func() { showUsage(productTitle, productVersion); os.Exit(2) }
+	if len(os.Args) > 0 {
+		for _, helpOption := range helpOptions {
+			if helpOption == os.Args[1] {
+				usage()
+			}
+		}
+	}
 	productWorkDir := filepath.Join(os.TempDir(), productName)
 	productLogFile := filepath.Join(productWorkDir, productName+".log")
 	fmt.Fprintf(os.Stderr, "%s %s\n", productTitle, productVersion)
@@ -31,19 +48,33 @@ func Run(productName, productTitle, productVersion string) {
 	log.SetOutput(logFile)
 	log.Printf("starting %s %s with arguments %v\n", productTitle, productVersion, os.Args)
 	log.Printf("current platform is OS=%q Architecture=%q\n", runtime.GOOS, runtime.GOARCH)
-	if len(os.Args) == 2 {
-		filenameOrURL := os.Args[1]
+	flag.BoolVar(&showConsole, "showconsole", false, "show Java console")
+	flag.StringVar(&javaDir, "javadir", "", "Java folder that should be used for starting a Java Web Start application")
+	flag.BoolVar(&uninstall, "uninstall", false, "uninstall a specific Java Web Start application")
+	flag.Usage = usage
+	flag.Parse()
+	argCount := flag.NArg()
+	flagCount := flag.NFlag()
+	if argCount == 1 && flagCount == 0 {
+		filenameOrURL := flag.Arg(0)
 		handleURLOrFilename(filenameOrURL, nil, productWorkDir, productTitle)
-	} else if len(os.Args) == 3 && os.Args[1] == "-uninstall" {
-		handleUninstallCommand(productWorkDir, productTitle)
-	} else if len(os.Args) == 4 && os.Args[1] == "-javadir" {
-		javaDir := os.Args[2]
-		filenameOrURL := os.Args[3]
-		var err error
-		if javaDir, err = java.UseJavaDir(javaDir); err != nil {
-			log.Fatal(err)
+	} else if argCount == 1 && uninstall {
+		filenameOrURL := flag.Arg(0)
+		handleUninstallCommand(filenameOrURL, productWorkDir, productTitle)
+	} else if argCount == 1 {
+		filenameOrURL := flag.Arg(0)
+		options := &launcher.Options{}
+		if isFlagSet("javadir") {
+			var err error
+			if javaDir, err = java.UseJavaDir(javaDir); err != nil {
+				log.Fatal(err)
+			}
+			options.JavaDir = javaDir
 		}
-		options := &launcher.Options{JavaDir: javaDir}
+		if isFlagSet("showconsole") {
+			java.ShowConsole()
+			options.ShowConsole = true
+		}
 		handleURLOrFilename(filenameOrURL, options, productWorkDir, productTitle)
 	} else {
 		isRunningFromBrowser := len(os.Args) > 2
@@ -121,9 +152,7 @@ func listenForMessage(options *launcher.Options, productWorkDir string, productT
 	}
 }
 
-func handleUninstallCommand(productWorkDir string, productTitle string) {
-	_ = os.Args[1] // -uninstall
-	filenameOrURL := os.Args[2]
+func handleUninstallCommand(filenameOrURL string, productWorkDir string, productTitle string) {
 	myLauncher, byURL, err := launcher.FindLauncherForURLOrFilename(filenameOrURL)
 	if err != nil {
 		log.Fatal(err)
@@ -141,4 +170,35 @@ func handleUninstallCommand(productWorkDir string, productTitle string) {
 			return
 		}
 	}
+}
+
+
+func isFlagSet(flagName string) bool {
+	found := false
+    flag.Visit(func(f *flag.Flag) {
+        if f.Name == flagName {
+            found = true
+        }
+    })
+    return found
+}
+
+func buildUsageText(productTitle, productVersion string) string {
+	program := filepath.Base(os.Args[0])
+	var text string
+	text += fmt.Sprintf("%s %s\n", productTitle, productVersion)
+	text += fmt.Sprintf("\n")
+	text += fmt.Sprintf("Usage:\n")
+	text += fmt.Sprintf("  %s [options] <filename or URL>\n", program)
+	text += fmt.Sprintf("  Options are:\n")
+	text += fmt.Sprintf("    -javadir <java folder> - use Java from <java folder>\n")
+	text += fmt.Sprintf("    -showconsole - show Java console\n")
+	text += fmt.Sprintf("    -uninstall - uninstall app\n")
+	text += fmt.Sprintf("    -help - show help\n")
+	return text
+}
+
+func showUsage(productTitle, productVersion string) {
+	text := buildUsageText(productTitle, productVersion)
+	utils.ShowUsage(productTitle, productVersion, text)
 }

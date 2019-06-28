@@ -312,3 +312,21 @@ func RemoveStartMenuFolder(folder string) error {
 	}
 	return os.RemoveAll(dir)
 }
+
+var (
+	pMessageBoxW = user32.NewProc("MessageBoxW")
+)
+
+const (
+	cMB_ICONINFORMATION = 0x00000040
+)
+
+func ShowUsage(productTitle, productVersion, text string) {
+	caption := productTitle + " " + productVersion
+	pMessageBoxW.Call(
+		uintptr(0),
+		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(text))),
+		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(caption))),
+		uintptr(cMB_ICONINFORMATION),
+	)
+}

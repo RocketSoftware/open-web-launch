@@ -26,6 +26,7 @@ type Launcher interface {
 type Options struct {
 	IsRunningFromBrowser bool
 	JavaDir              string
+	ShowConsole			 bool
 }
 
 func RegisterProtocol(scheme string, launcher Launcher) {

@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"fmt"
+	"os"
 	"os/exec"
 	"runtime"
 	"syscall"
@@ -52,4 +54,8 @@ func RemoveDesktopShortcut(title string) error {
 
 func RemoveStartMenuFolder(folder string) error {
 	return nil
+}
+
+func ShowUsage(productTitle, productVersion, text string) {
+	fmt.Fprintf(os.Stderr, text)
 }
