@@ -523,9 +523,11 @@ func (launcher *Launcher) downloadExtensions() error {
 					return
 				}
 				launcher.gui.SendTextMessage(fmt.Sprintf("Downloading JAR %s finished\n", path.Base(jarURL)))
-				if err := verifier.VerifyWithJARSigner(filename, false); err != nil {
-					errChan <- errors.Wrapf(err, "JAR verification failed %s", filepath.Base(filename))
-					return
+				if !java.IsVerificationDisabled() {
+					if err := verifier.VerifyWithJARSigner(filename, false); err != nil {
+						errChan <- errors.Wrapf(err, "JAR verification failed %s", filepath.Base(filename))
+						return
+					}
 				}
 				cert, err := verifier.GetJARCertificate(filename)
 				if err != nil {
