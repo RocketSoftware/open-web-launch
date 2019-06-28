@@ -11,6 +11,7 @@ type GUI interface {
 	ProgressStep()
 	Wait()
 	Closed() bool
+	WaitForWindow()
 }
 
 //go:generate go-bindata-assetfs -pkg gui assets/...

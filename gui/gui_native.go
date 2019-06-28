@@ -88,17 +88,17 @@ func (gui *NativeGUI) Start(windowTitle string) error {
 		return err
 	}
 	gui.icon = img
-	go func() {
-		defer close(gui.done)
-		window := nucular.NewMasterWindowSize(0, windowTitle, image.Point{470, 240}, gui.updateFn)
-		window.SetStyle(gui.makeStyle())
-		gui.window = window
-		window.Main()
+	go func () {
+		gui.waitWindowReadyness()
+		if err := utils.LoadIconAndSetForWindow(windowTitle); err != nil {
+			log.Printf("warning: unable to set window icon: %v", err)
+		}
 	}()
-	gui.waitWindowReadyness()
-	if err := utils.LoadIconAndSetForWindow(windowTitle); err != nil {
-		log.Printf("warning: unable to set window icon: %v", err)
-	}
+	defer close(gui.done)
+	window := nucular.NewMasterWindowSize(0, windowTitle, image.Point{470, 240}, gui.updateFn)
+	window.SetStyle(gui.makeStyle())
+	gui.window = window
+	window.Main()
 	return nil
 }
 
@@ -178,6 +178,10 @@ func (gui *NativeGUI) emitWindowReady() {
 }
 
 func (gui *NativeGUI) waitWindowReadyness() {
+	<-gui.ready
+}
+
+func (gui *NativeGUI) WaitForWindow() {
 	<-gui.ready
 }
 

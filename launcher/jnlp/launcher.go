@@ -63,24 +63,31 @@ func (launcher *Launcher) RunByURL(url string) error {
 	var err error
 	log.Printf("Processing %s\n", url)
 	url = launcher.normalizeURL(url)
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func () {
+		defer func() {
+			if err == nil || err == errCancelled {
+				launcher.gui.Terminate()
+			}
+			wg.Done()
+		}()
+		launcher.gui.WaitForWindow()
+		var filedata []byte
+		if filedata, err = download.ToMemory(url); err != nil {
+			launcher.gui.SendErrorMessage(err)
+			return
+		}
+		if err = launcher.run(filedata); err != nil {
+			launcher.gui.SendErrorMessage(err)
+			return
+		}
+	}()
 	if err = launcher.gui.Start(launcher.WindowTitle); err != nil {
 		return err
 	}
-	defer func() {
-		if err == nil || err == errCancelled {
-			launcher.gui.Terminate()
-		}
-	}()
-	var filedata []byte
-	if filedata, err = download.ToMemory(url); err != nil {
-		launcher.gui.SendErrorMessage(err)
-		return err
-	}
-	if err = launcher.run(filedata); err != nil {
-		launcher.gui.SendErrorMessage(err)
-		return err
-	}
-	return nil
+	wg.Wait()
+	return err
 }
 
 func (launcher *Launcher) SetOptions(options *launcher.Options) {
@@ -91,29 +98,36 @@ func (launcher *Launcher) SetOptions(options *launcher.Options) {
 func (launcher *Launcher) RunByFilename(filename string) error {
 	var err error
 	log.Printf("Processing %s\n", filename)
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func () {
+		defer func() {
+			if err == nil || err == errCancelled {
+				launcher.gui.Terminate()
+			}
+			wg.Done()
+		}()
+		launcher.gui.WaitForWindow()
+		var filedata []byte
+		if filedata, err = ioutil.ReadFile(filename); err != nil {
+			launcher.gui.SendErrorMessage(err)
+			return 
+		}
+		filedata, err = launcher.checkForUpdate(filedata)
+		if err != nil {
+			launcher.gui.SendErrorMessage(err)
+			return 
+		}
+		if err = launcher.run(filedata); err != nil {
+			launcher.gui.SendErrorMessage(err)
+			return 
+		}
+	}()
 	if err = launcher.gui.Start(launcher.WindowTitle); err != nil {
 		return err
 	}
-	defer func() {
-		if err == nil || err == errCancelled {
-			launcher.gui.Terminate()
-		}
-	}()
-	var filedata []byte
-	if filedata, err = ioutil.ReadFile(filename); err != nil {
-		launcher.gui.SendErrorMessage(err)
-		return err
-	}
-	filedata, err = launcher.checkForUpdate(filedata)
-	if err != nil {
-		launcher.gui.SendErrorMessage(err)
-		return err
-	}
-	if err = launcher.run(filedata); err != nil {
-		launcher.gui.SendErrorMessage(err)
-		return err
-	}
-	return nil
+	wg.Wait()
+	return err
 }
 
 // Wait waits until JNLP Launcher gracefully terminated
