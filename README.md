@@ -96,7 +96,7 @@ The extension for Chrome is available in the Chrome Web Store from [https://chro
 
 The add-on for Firefox is available on the Mozilla site from [https://addons.mozilla.org/en-US/firefox/addon/open-web-launch/](https://addons.mozilla.org/en-US/firefox/addon/open-web-launch/).
 
-##Command Line Operations
+## Command Line Operations
 
 Open Web Launch has the following command line options:
 
