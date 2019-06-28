@@ -17,6 +17,7 @@ import (
 var javaExecutable string
 var javaSource string
 var jarSignerExecutable string
+var disableVerification bool
 
 func EnsureJavaExecutableAvailability() error {
 	if filepath.IsAbs(javaExecutable) {
@@ -66,6 +67,10 @@ func JARSigner() string {
 
 func JavaSource() string {
 	return javaSource
+}
+
+func IsVerificationDisabled() bool {
+	return disableVerification
 }
 
 // Version returns detailed Java version information, e.g.
@@ -130,4 +135,5 @@ func ShowConsole() {
 func init() {
 	javaExecutable = getJavaExecutable()
 	jarSignerExecutable = getJARSignerExecutable()
+	disableVerification = getDisableVerificationSetting()
 }

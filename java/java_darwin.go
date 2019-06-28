@@ -21,3 +21,7 @@ func getJARSignerExecutable() string {
 func getJARSignerExecutableUsingJavaDir(dir string) string {
 	return filepath.Join(dir, "bin", "jarsigner")
 }
+
+func getDisableVerificationSetting() bool {
+	return false
+}
