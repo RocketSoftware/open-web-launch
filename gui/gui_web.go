@@ -29,7 +29,7 @@ type WebGUI struct {
 	webSocketChannel chan string
 }
 
-func New() GUI {
+func NewWebGUI() GUI {
 	return GUI(&WebGUI{})
 }
 

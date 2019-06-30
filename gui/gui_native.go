@@ -1,4 +1,3 @@
-// +build native
 
 package gui
 
@@ -67,7 +66,7 @@ var myThemeTable = style.ColorTable{
 	ColorTabHeader:             color.RGBA{180, 180, 180, 255},
 }
 
-func New() GUI {
+func NewNativeGUI() GUI {
 	gui := &NativeGUI{}
 	gui.ready = make(chan (interface{}))
 	gui.done = make(chan (interface{}))
