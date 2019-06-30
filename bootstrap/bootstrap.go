@@ -189,12 +189,17 @@ func buildUsageText(productTitle, productVersion string) string {
 	text += fmt.Sprintf("%s %s\n", productTitle, productVersion)
 	text += fmt.Sprintf("\n")
 	text += fmt.Sprintf("Usage:\n")
-	text += fmt.Sprintf("  %s [options] <filename or URL>\n", program)
-	text += fmt.Sprintf("  Options are:\n")
-	text += fmt.Sprintf("    -javadir <java folder> - use Java from <java folder>\n")
-	text += fmt.Sprintf("    -showconsole - show Java console\n")
-	text += fmt.Sprintf("    -uninstall - uninstall app\n")
-	text += fmt.Sprintf("    -help - show help\n")
+	text += fmt.Sprintf("%s [options] <filename | URL>\n", program)
+	text += fmt.Sprintf("\n")
+	text += fmt.Sprintf("Options:\n")
+	text += fmt.Sprintf("  -javadir <java folder>\n")
+	text += fmt.Sprintf("      use Java from <java folder>\n")
+	text += fmt.Sprintf("  -showconsole\n")
+	text += fmt.Sprintf("      show Java console\n")
+	text += fmt.Sprintf("  -uninstall\n")
+	text += fmt.Sprintf("      uninstall app\n")
+	text += fmt.Sprintf("  -help\n")
+	text += fmt.Sprintf("      show help\n")
 	return text
 }
 
