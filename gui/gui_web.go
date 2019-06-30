@@ -112,9 +112,6 @@ func (gui *WebGUI) ProgressStep() {
 	gui.sendMessage("progress_step", "")
 }
 
-func (gui *WebGUI) Wait() {
-}
-
 func (gui *WebGUI) Closed() bool {
 	return false
 }

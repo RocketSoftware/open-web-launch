@@ -95,7 +95,6 @@ func handleURLOrFilename(filenameOrURL string, options *launcher.Options, produc
 	myLauncher.SetWorkDir(productWorkDir)
 	myLauncher.SetWindowTitle(productTitle)
 	myLauncher.SetOptions(options)
-	defer myLauncher.Wait()
 	if byURL {
 		if err := myLauncher.RunByURL(filenameOrURL); err != nil {
 			log.Println(err)
@@ -135,7 +134,6 @@ func listenForMessage(options *launcher.Options, productWorkDir string, productT
 	myLauncher.SetWorkDir(productWorkDir)
 	myLauncher.SetWindowTitle(productTitle)
 	myLauncher.SetOptions(options)
-	defer myLauncher.Wait()
 	if err := myLauncher.RunByURL(message.URL); err != nil {
 		stringError := fmt.Sprintf("%v", err)
 		jsonError, _ := json.Marshal(stringError)

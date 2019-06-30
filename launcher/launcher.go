@@ -16,7 +16,6 @@ type Launcher interface {
 	RunByFilename(filename string) error
 	RunByURL(url string) error
 	SetOptions(options *Options)
-	Wait()
 	Terminate()
 	CheckPlatform() error
 	UninstallByFilename(filename string) error

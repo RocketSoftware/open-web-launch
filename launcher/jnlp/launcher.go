@@ -129,13 +129,6 @@ func (launcher *Launcher) RunByFilename(filename string) error {
 	return err
 }
 
-// Wait waits until JNLP Launcher gracefully terminated
-func (launcher *Launcher) Wait() {
-	if launcher.gui != nil {
-		launcher.gui.Wait()
-	}
-}
-
 // Terminate forces GUI to close
 func (launcher *Launcher) Terminate() {
 	if launcher.gui != nil {

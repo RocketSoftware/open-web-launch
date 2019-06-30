@@ -28,7 +28,6 @@ type NativeGUI struct {
 	window      nucular.MasterWindow
 	ready       chan interface{} // the channel closed when the gui appears for the first time
 	readyOnce   sync.Once        // protects ready channel from being closed twice
-	done        chan interface{} // the channel closed when the master window closes
 	icon        *image.RGBA
 	err         error
 }
@@ -69,7 +68,6 @@ var myThemeTable = style.ColorTable{
 func NewNativeGUI() GUI {
 	gui := &NativeGUI{}
 	gui.ready = make(chan (interface{}))
-	gui.done = make(chan (interface{}))
 	gui.title.Store("")
 	gui.text.Store("")
 	gui.progressMax.Store(0)
@@ -93,7 +91,6 @@ func (gui *NativeGUI) Start(windowTitle string) error {
 			log.Printf("warning: unable to set window icon: %v", err)
 		}
 	}()
-	defer close(gui.done)
 	window := nucular.NewMasterWindowSize(0, windowTitle, image.Point{470, 240}, gui.updateFn)
 	window.SetStyle(gui.makeStyle())
 	gui.window = window
@@ -193,8 +190,6 @@ func (gui *NativeGUI) Terminate() error {
 		if !gui.window.Closed() {
 			go gui.window.Close()
 		}
-	} else {
-		close(gui.done)
 	}
 	return nil
 }
@@ -231,9 +226,6 @@ func (gui *NativeGUI) ProgressStep() {
 	gui.window.Changed()
 }
 
-func (gui *NativeGUI) Wait() {
-	<-gui.done
-}
 
 func (gui *NativeGUI) Closed() bool {
 	return gui.window.Closed()

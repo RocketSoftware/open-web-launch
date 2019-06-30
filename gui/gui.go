@@ -9,7 +9,6 @@ type GUI interface {
 	SetTitle(title string) error
 	SetProgressMax(val int)
 	ProgressStep()
-	Wait()
 	Closed() bool
 	WaitForWindow()
 }
