@@ -62,11 +62,12 @@ func (launcher *Launcher) RunByURL(url string) error {
 	var err error
 	log.Printf("Processing %s\n", url)
 	url = launcher.normalizeURL(url)
+	launcher.gui = gui.NewNativeGUI()
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func () {
 		defer func() {
-			if err == nil || err == errCancelled {
+			if err == nil {
 				launcher.Terminate()
 			}
 			wg.Done()
@@ -97,11 +98,12 @@ func (launcher *Launcher) SetOptions(options *launcher.Options) {
 func (launcher *Launcher) RunByFilename(filename string) error {
 	var err error
 	log.Printf("Processing %s\n", filename)
+	launcher.gui = gui.NewNativeGUI()
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func () {
 		defer func() {
-			if err == nil || err == errCancelled {
+			if err == nil {
 				launcher.Terminate()
 			}
 			wg.Done()
@@ -799,7 +801,6 @@ func (launcher *Launcher) Closed() bool {
 }
 
 func (launcher *Launcher) StartGUI() error {
-	launcher.gui = gui.NewNativeGUI()
 	return launcher.gui.Start(launcher.WindowTitle)
 }
 
