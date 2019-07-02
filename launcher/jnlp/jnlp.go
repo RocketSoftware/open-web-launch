@@ -224,6 +224,8 @@ func (jnlp *JNLP) getNativeLibs() ([]string, error) {
 	return urls, nil
 }
 
+// Title returns title of JNLP application
+// or empty string if Information tag not found
 func (jnlp *JNLP) Title() string {
 	if jnlp.Information != nil {
 		return jnlp.Information.Title
