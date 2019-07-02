@@ -14,7 +14,7 @@ import (
 func (launcher *Launcher) UninstallByFilename(filename string, showGUI bool) error {
 	log.Printf("uninstall using filename %s", filename)
 	if showGUI {
-		launcher.gui = gui.NewNativeGUI()
+		launcher.gui = gui.New()
 	}
 	var wg sync.WaitGroup
 	var err error
@@ -44,9 +44,8 @@ func (launcher *Launcher) UninstallByURL(url string, showGUI bool) error {
 	var err error
 	url = launcher.normalizeURL(url)
 	if showGUI {
-		launcher.gui = gui.NewNativeGUI()
+		launcher.gui = gui.New()
 	}
-	launcher.gui = gui.NewNativeGUI()
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {

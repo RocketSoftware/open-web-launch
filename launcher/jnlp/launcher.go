@@ -37,7 +37,7 @@ type Launcher struct {
 	relevantResources []*Resources
 	codebaseURL       *url.URL
 	cmd               *exec.Cmd
-	gui               *gui.NativeGUI
+	gui               *gui.GUI
 	options           *launcher.Options
 	cert              []byte
 }
@@ -62,7 +62,7 @@ func (launcher *Launcher) RunByURL(url string) error {
 	var err error
 	log.Printf("Processing %s\n", url)
 	url = launcher.normalizeURL(url)
-	launcher.gui = gui.NewNativeGUI()
+	launcher.gui = gui.New()
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
@@ -98,7 +98,7 @@ func (launcher *Launcher) SetOptions(options *launcher.Options) {
 func (launcher *Launcher) RunByFilename(filename string) error {
 	var err error
 	log.Printf("Processing %s\n", filename)
-	launcher.gui = gui.NewNativeGUI()
+	launcher.gui = gui.New()
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
