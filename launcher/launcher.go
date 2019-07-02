@@ -20,20 +20,12 @@ type Launcher interface {
 	CheckPlatform() error
 	UninstallByFilename(filename string) error
 	UninstallByURL(url string) error
-	SendErrorMessage(err error) error
-	SendTextMessage(message string) error
-	WaitForWindow()
-	Closed() bool
-	StartGUI() error
-	SetTitle() error
-	SetProgressMax(val int)
-	ProgressStep()
 }
 
 type Options struct {
 	IsRunningFromBrowser bool
 	JavaDir              string
-	ShowConsole			 bool
+	ShowConsole          bool
 }
 
 func RegisterProtocol(scheme string, launcher Launcher) {

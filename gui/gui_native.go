@@ -1,4 +1,3 @@
-
 package gui
 
 import (
@@ -10,10 +9,10 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/rocketsoftware/open-web-launch/utils"
 	"github.com/aarzilli/nucular"
 	"github.com/aarzilli/nucular/label"
 	"github.com/aarzilli/nucular/style"
+	"github.com/rocketsoftware/open-web-launch/utils"
 	"golang.org/x/mobile/event/key"
 )
 
@@ -65,16 +64,19 @@ var myThemeTable = style.ColorTable{
 	ColorTabHeader:             color.RGBA{180, 180, 180, 255},
 }
 
-func NewNativeGUI() GUI {
+func NewNativeGUI() *NativeGUI {
 	gui := &NativeGUI{}
 	gui.ready = make(chan (interface{}))
 	gui.title.Store("")
 	gui.text.Store("")
 	gui.progressMax.Store(0)
-	return GUI(gui)
+	return gui
 }
 
 func (gui *NativeGUI) Start(windowTitle string) error {
+	if gui == nil {
+		return nil
+	}
 	imageBytes, err := Asset("assets/Icon64.png")
 	if err != nil {
 		return err
@@ -85,8 +87,8 @@ func (gui *NativeGUI) Start(windowTitle string) error {
 		return err
 	}
 	gui.icon = img
-	go func () {
-		gui.waitWindowReadyness()
+	go func() {
+		gui.WaitForWindow()
 		if err := utils.LoadIconAndSetForWindow(windowTitle); err != nil {
 			log.Printf("warning: unable to set window icon: %v", err)
 		}
@@ -173,11 +175,10 @@ func (gui *NativeGUI) emitWindowReady() {
 	gui.readyOnce.Do(func() { close(gui.ready) })
 }
 
-func (gui *NativeGUI) waitWindowReadyness() {
-	<-gui.ready
-}
-
 func (gui *NativeGUI) WaitForWindow() {
+	if gui == nil {
+		return
+	}
 	<-gui.ready
 }
 
@@ -186,6 +187,9 @@ func (gui *NativeGUI) cancel(w *nucular.Window) {
 }
 
 func (gui *NativeGUI) Terminate() error {
+	if gui == nil {
+		return nil
+	}
 	if gui.window != nil {
 		if !gui.window.Closed() {
 			go gui.window.Close()
@@ -195,38 +199,58 @@ func (gui *NativeGUI) Terminate() error {
 }
 
 func (gui *NativeGUI) SendTextMessage(text string) error {
+	if gui == nil {
+		return nil
+	}
 	gui.text.Store(text)
 	gui.window.Changed()
 	return nil
 }
 
 func (gui *NativeGUI) SendErrorMessage(err error) error {
+	if gui == nil {
+		return nil
+	}
 	gui.err = err
 	gui.window.Changed()
 	return nil
 }
 
 func (gui *NativeGUI) SendCloseMessage() error {
+	if gui == nil {
+		return nil
+	}
 	gui.window.Close()
 	return nil
 }
 
 func (gui *NativeGUI) SetTitle(title string) error {
+	if gui == nil {
+		return nil
+	}
 	gui.title.Store(title)
 	gui.window.Changed()
 	return nil
 }
 
 func (gui *NativeGUI) SetProgressMax(val int) {
+	if gui == nil {
+		return
+	}
 	gui.progressMax.Store(val)
 }
 
 func (gui *NativeGUI) ProgressStep() {
+	if gui == nil {
+		return
+	}
 	atomic.AddInt32(&gui.progress, 1)
 	gui.window.Changed()
 }
 
-
 func (gui *NativeGUI) Closed() bool {
+	if gui == nil {
+		return false
+	}
 	return gui.window.Closed()
 }

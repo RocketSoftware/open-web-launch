@@ -16,12 +16,12 @@ import (
 	"github.com/rocketsoftware/open-web-launch/launcher"
 	launcher_utils "github.com/rocketsoftware/open-web-launch/launcher/utils"
 
+	"github.com/pkg/errors"
 	"github.com/rocketsoftware/open-web-launch/gui"
 	"github.com/rocketsoftware/open-web-launch/java"
 	"github.com/rocketsoftware/open-web-launch/utils"
 	"github.com/rocketsoftware/open-web-launch/utils/download"
 	"github.com/rocketsoftware/open-web-launch/verifier"
-	"github.com/pkg/errors"
 )
 
 var errCancelled = errors.New("cancelled by user")
@@ -37,7 +37,7 @@ type Launcher struct {
 	relevantResources []*Resources
 	codebaseURL       *url.URL
 	cmd               *exec.Cmd
-	gui               gui.GUI
+	gui               *gui.NativeGUI
 	options           *launcher.Options
 	cert              []byte
 }
@@ -65,25 +65,25 @@ func (launcher *Launcher) RunByURL(url string) error {
 	launcher.gui = gui.NewNativeGUI()
 	var wg sync.WaitGroup
 	wg.Add(1)
-	go func () {
+	go func() {
 		defer func() {
 			if err == nil {
-				launcher.Terminate()
+				launcher.gui.Terminate()
 			}
 			wg.Done()
 		}()
-		launcher.WaitForWindow()
+		launcher.gui.WaitForWindow()
 		var filedata []byte
 		if filedata, err = download.ToMemory(url); err != nil {
-			launcher.SendErrorMessage(err)
+			launcher.gui.SendErrorMessage(err)
 			return
 		}
 		if err = launcher.run(filedata); err != nil {
-			launcher.SendErrorMessage(err)
+			launcher.gui.SendErrorMessage(err)
 			return
 		}
 	}()
-	if err = launcher.StartGUI(); err != nil {
+	if err = launcher.gui.Start(launcher.WindowTitle); err != nil {
 		return err
 	}
 	wg.Wait()
@@ -101,30 +101,30 @@ func (launcher *Launcher) RunByFilename(filename string) error {
 	launcher.gui = gui.NewNativeGUI()
 	var wg sync.WaitGroup
 	wg.Add(1)
-	go func () {
+	go func() {
 		defer func() {
 			if err == nil {
-				launcher.Terminate()
+				launcher.gui.Terminate()
 			}
 			wg.Done()
 		}()
-		launcher.WaitForWindow()
+		launcher.gui.WaitForWindow()
 		var filedata []byte
 		if filedata, err = ioutil.ReadFile(filename); err != nil {
-			launcher.SendErrorMessage(err)
-			return 
+			launcher.gui.SendErrorMessage(err)
+			return
 		}
 		filedata, err = launcher.checkForUpdate(filedata)
 		if err != nil {
-			launcher.SendErrorMessage(err)
-			return 
+			launcher.gui.SendErrorMessage(err)
+			return
 		}
 		if err = launcher.run(filedata); err != nil {
-			launcher.SendErrorMessage(err)
-			return 
+			launcher.gui.SendErrorMessage(err)
+			return
 		}
 	}()
-	if err = launcher.StartGUI(); err != nil {
+	if err = launcher.gui.Start(launcher.WindowTitle); err != nil {
 		return err
 	}
 	wg.Wait()
@@ -298,7 +298,7 @@ func (launcher *Launcher) exec() error {
 		return errors.Wrap(err, "unable to run java application")
 	}
 	launcher.cmd = cmd
-	if launcher.Closed() {
+	if launcher.gui.Closed() {
 		return errCancelled
 	}
 	return cmd.Start()
@@ -313,7 +313,7 @@ func (launcher *Launcher) run(filedata []byte) error {
 	launcher.jnlp = jnlpFile
 	launcher.filedata = filedata
 	launcher.resourceDir = launcher.generateResourcesDirName(filedata)
-	launcher.SetTitle()
+	launcher.gui.SetTitle(launcher.jnlp.Information.Title)
 	if err := launcher.saveOriginalFile(); err != nil {
 		return err
 	}
@@ -336,10 +336,10 @@ func (launcher *Launcher) run(filedata []byte) error {
 	if err := launcher.createShortcuts(); err != nil {
 		return err
 	}
-	if launcher.Closed() {
+	if launcher.gui.Closed() {
 		return errCancelled
 	}
-	launcher.SendTextMessage("Starting application...")
+	launcher.gui.SendTextMessage("Starting application...")
 	return launcher.exec()
 }
 
@@ -353,7 +353,7 @@ func (launcher *Launcher) downloadIcons() error {
 		return errors.Wrapf(err, "unable to create directory for icon files")
 	}
 	for _, icon := range launcher.jnlp.Information.Icons {
-		if launcher.Closed() {
+		if launcher.gui.Closed() {
 			return errCancelled
 		}
 		url, err := url.Parse(icon.Href)
@@ -362,17 +362,17 @@ func (launcher *Launcher) downloadIcons() error {
 			continue
 		}
 		url = codebaseURL.ResolveReference(url)
-		launcher.SendTextMessage(fmt.Sprintf("Downloading %s", path.Base(icon.Href)))
+		launcher.gui.SendTextMessage(fmt.Sprintf("Downloading %s", path.Base(icon.Href)))
 		allowCached := true
 		if _, err := download.ToFile(url.String(), iconDir, allowCached); err != nil {
 			log.Printf("warning: unable to download icon %s: %v\n", icon.Href, err)
-			launcher.SendTextMessage(fmt.Sprintf("Warning: unable to download %s", path.Base(icon.Href)))
+			launcher.gui.SendTextMessage(fmt.Sprintf("Warning: unable to download %s", path.Base(icon.Href)))
 			continue
 		}
 		icon.Downloaded = true
-		launcher.SendTextMessage(fmt.Sprintf("Downloading %s finished", path.Base(icon.Href)))
+		launcher.gui.SendTextMessage(fmt.Sprintf("Downloading %s finished", path.Base(icon.Href)))
 	}
-	launcher.ProgressStep()
+	launcher.gui.ProgressStep()
 	return nil
 }
 
@@ -394,7 +394,7 @@ func (launcher *Launcher) downloadJARs() error {
 	if err != nil {
 		return err
 	}
-	jars = append(jars, nativeLibJars...)	
+	jars = append(jars, nativeLibJars...)
 	jarDir, err := launcher.createDirForResourceFiles()
 	if err != nil {
 		return errors.Wrapf(err, "unable to create directory for jar files")
@@ -411,19 +411,19 @@ func (launcher *Launcher) downloadJARs() error {
 			tokens <- struct{}{}
 			defer func() { <-tokens }()
 			defer wg.Done()
-			if launcher.Closed() {
+			if launcher.gui.Closed() {
 				return
 			}
 			log.Printf("downloading JAR %s\n", url)
-			launcher.SendTextMessage(fmt.Sprintf("Downloading JAR %s\n", path.Base(url)))
+			launcher.gui.SendTextMessage(fmt.Sprintf("Downloading JAR %s\n", path.Base(url)))
 			filename, err := download.ToFile(url, jarDir, allowCached)
 			if err != nil {
 				errChan <- err
 				return
 			}
-			launcher.ProgressStep()
-			launcher.SendTextMessage(fmt.Sprintf("Downloading JAR %s finished\n", path.Base(url)))
-			if launcher.Closed() {
+			launcher.gui.ProgressStep()
+			launcher.gui.SendTextMessage(fmt.Sprintf("Downloading JAR %s finished\n", path.Base(url)))
+			if launcher.gui.Closed() {
 				return
 			}
 			if !java.IsVerificationDisabled() {
@@ -431,10 +431,10 @@ func (launcher *Launcher) downloadJARs() error {
 					errChan <- errors.Wrapf(err, "JAR verification failed %s", filepath.Base(filename))
 					return
 				}
-				launcher.SendTextMessage(fmt.Sprintf("Checking JAR %s finished\n", path.Base(url)))
+				launcher.gui.SendTextMessage(fmt.Sprintf("Checking JAR %s finished\n", path.Base(url)))
 			}
-			launcher.ProgressStep()
-			if launcher.Closed() {
+			launcher.gui.ProgressStep()
+			if launcher.gui.Closed() {
 				return
 			}
 			cert, err := verifier.GetJARCertificate(filename)
@@ -443,14 +443,14 @@ func (launcher *Launcher) downloadJARs() error {
 				return
 			}
 			certChan <- cert
-			launcher.ProgressStep()
+			launcher.gui.ProgressStep()
 		}(url)
 	}
 	wg.Wait()
-	if launcher.Closed() {
+	if launcher.gui.Closed() {
 		return errCancelled
 	}
-	launcher.SendTextMessage("Downloading finished")
+	launcher.gui.SendTextMessage("Downloading finished")
 	close(errChan)
 	close(certChan)
 	if err, ok := <-errChan; ok {
@@ -463,14 +463,14 @@ func (launcher *Launcher) downloadJARs() error {
 		}
 	}
 	launcher.cert = firstCert
-	if launcher.Closed() {
+	if launcher.gui.Closed() {
 		return errCancelled
 	}
 	return nil
 }
 
 func (launcher *Launcher) downloadExtensions() error {
-	launcher.SendTextMessage("Downloading extensions...")
+	launcher.gui.SendTextMessage("Downloading extensions...")
 	extensions, err := launcher.getExtensions()
 	allowCached := launcher.jnlp.Information.OfflineAllowed != nil
 	if err != nil {
@@ -489,17 +489,17 @@ func (launcher *Launcher) downloadExtensions() error {
 			tokens <- struct{}{}
 			defer func() { <-tokens }()
 			defer wg.Done()
-			if launcher.Closed() {
+			if launcher.gui.Closed() {
 				return
 			}
 			log.Printf("downloading extension %s\n", extension.Name)
-			launcher.SendTextMessage(fmt.Sprintf("Downloading extension %s\n", extension.Name))
+			launcher.gui.SendTextMessage(fmt.Sprintf("Downloading extension %s\n", extension.Name))
 			filename, err := download.ToFile(extension.URL, jarDir, allowCached)
 			if err != nil {
 				errChan <- errors.Wrapf(err, "unable to download jnlp file for extension %s", extension.Name)
 				return
 			}
-			if launcher.Closed() {
+			if launcher.gui.Closed() {
 				return
 			}
 			extensionJNLP, err := DecodeFile(filename)
@@ -514,13 +514,13 @@ func (launcher *Launcher) downloadExtensions() error {
 			}
 			for _, jarURL := range jars {
 				log.Printf("downloading JAR %s\n", jarURL)
-				launcher.SendTextMessage(fmt.Sprintf("Downloading JAR %s\n", path.Base(jarURL)))
+				launcher.gui.SendTextMessage(fmt.Sprintf("Downloading JAR %s\n", path.Base(jarURL)))
 				filename, err := download.ToFile(jarURL, jarDir, allowCached)
 				if err != nil {
 					errChan <- errors.Wrapf(err, "unable to download JAR for extension %s", extension.Name)
 					return
 				}
-				launcher.SendTextMessage(fmt.Sprintf("Downloading JAR %s finished\n", path.Base(jarURL)))
+				launcher.gui.SendTextMessage(fmt.Sprintf("Downloading JAR %s finished\n", path.Base(jarURL)))
 				if !java.IsVerificationDisabled() {
 					if err := verifier.VerifyWithJARSigner(filename, false); err != nil {
 						errChan <- errors.Wrapf(err, "JAR verification failed %s", filepath.Base(filename))
@@ -536,24 +536,24 @@ func (launcher *Launcher) downloadExtensions() error {
 					errChan <- errors.New("all JARs have to be signed with the same certificate")
 					return
 				}
-				launcher.SendTextMessage(fmt.Sprintf("Checking JAR %s finished\n", path.Base(jarURL)))
-				if launcher.Closed() {
+				launcher.gui.SendTextMessage(fmt.Sprintf("Checking JAR %s finished\n", path.Base(jarURL)))
+				if launcher.gui.Closed() {
 					return
 				}
 			}
-			launcher.ProgressStep()
-			launcher.SendTextMessage(fmt.Sprintf("Downloading extension %s finished\n", extension.Name))
+			launcher.gui.ProgressStep()
+			launcher.gui.SendTextMessage(fmt.Sprintf("Downloading extension %s finished\n", extension.Name))
 		}(extension)
 	}
 	wg.Wait()
-	if launcher.Closed() {
+	if launcher.gui.Closed() {
 		return errCancelled
 	}
 	close(errChan)
 	if err, ok := <-errChan; ok {
 		return err
 	}
-	if launcher.Closed() {
+	if launcher.gui.Closed() {
 		return errCancelled
 	}
 	return nil
@@ -566,7 +566,7 @@ func (launcher *Launcher) extractNativeLibs() error {
 	}
 	jarDir := launcher.resourceDir
 	for _, url := range nativeLibJars {
-		if launcher.Closed() {
+		if launcher.gui.Closed() {
 			return errCancelled
 		}
 		log.Printf("extracting Nativelib %s\n", path.Base(url))
@@ -574,12 +574,12 @@ func (launcher *Launcher) extractNativeLibs() error {
 		filenameWithoutExt := strings.TrimSuffix(filename, path.Ext(filename))
 		dir := filepath.Join(jarDir, filenameWithoutExt)
 		zipFilename := filepath.Join(launcher.resourceDir, path.Base(url))
-		launcher.SendTextMessage(fmt.Sprintf("Extracting Nativelib %s\n", path.Base(url)))
+		launcher.gui.SendTextMessage(fmt.Sprintf("Extracting Nativelib %s\n", path.Base(url)))
 		if err := launcher_utils.Extract(zipFilename, dir); err != nil {
 			return errors.Wrapf(err, "extracting nativelib %s", path.Base(url))
 		}
 	}
-	if launcher.Closed() {
+	if launcher.gui.Closed() {
 		return errCancelled
 	}
 	return nil
@@ -595,8 +595,8 @@ func (launcher *Launcher) estimateProgressMax() error {
 		return err
 	}
 	extensionJars := launcher.getExtensionJars()
-	progressMax := 3*(len(jars) + len(nativeLibJars)) + len(extensionJars) + 1
-	launcher.SetProgressMax(progressMax)
+	progressMax := 3*(len(jars)+len(nativeLibJars)) + len(extensionJars) + 1
+	launcher.gui.SetProgressMax(progressMax)
 	return nil
 }
 
@@ -607,14 +607,14 @@ func (launcher *Launcher) createShortcuts() error {
 	description := launcher.getShortcutDescription()
 	arguments := launcher.getShortcutArguments()
 	if info.Desktop != nil || (info.Shortcut != nil && info.Shortcut.Desktop != nil) {
-		launcher.SendTextMessage("Creating Desktop shortcut")
+		launcher.gui.SendTextMessage("Creating Desktop shortcut")
 		if err := utils.CreateDesktopShortcut(os.Args[0], title, description, iconSrc, arguments...); err != nil {
 			return err
 		}
 	}
 	if info.Shortcut != nil && info.Shortcut.Menu != nil {
 		submenu := info.Shortcut.Menu.SubMenu
-		launcher.SendTextMessage("Creating Start Menu shortcut")
+		launcher.gui.SendTextMessage("Creating Start Menu shortcut")
 		if err := utils.CreateStartMenuShortcut(os.Args[0], submenu, title, description, iconSrc, arguments...); err != nil {
 			return err
 		}
@@ -771,56 +771,6 @@ func (launcher *Launcher) saveOriginalFile() error {
 		return errors.Wrap(err, "unable to save original jnlp file")
 	}
 	return nil
-}
-
-func (launcher *Launcher) SendTextMessage(message string) error {
-	if launcher.gui != nil {
-		return launcher.gui.SendTextMessage(message)
-	}
-	return nil
-}
-
-func (launcher *Launcher) SendErrorMessage(err error) error {
-	if launcher.gui != nil {
-		return launcher.gui.SendErrorMessage(err)
-	}
-	return nil
-}
-
-func (launcher *Launcher) WaitForWindow() {
-	if launcher.gui != nil {
-		launcher.gui.WaitForWindow()
-	}
-}
-
-func (launcher *Launcher) Closed() bool {
-	if launcher.gui != nil {
-		return launcher.gui.Closed()
-	}
-	return false
-}
-
-func (launcher *Launcher) StartGUI() error {
-	return launcher.gui.Start(launcher.WindowTitle)
-}
-
-func (launcher *Launcher) SetTitle() error {
-	if launcher.gui != nil {
-		return launcher.gui.SetTitle(launcher.jnlp.Information.Title)
-	}
-	return nil
-}
-
-func (launcher *Launcher) SetProgressMax(val int) {
-	if launcher.gui != nil {
-		launcher.gui.SetProgressMax(val)
-	}
-}
-
-func (launcher *Launcher) ProgressStep() {
-	if launcher.gui != nil {
-		launcher.gui.ProgressStep()
-	}
 }
 
 func (launcher *Launcher) normalizeURL(url string) string {
