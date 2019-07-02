@@ -313,7 +313,7 @@ func (launcher *Launcher) run(filedata []byte) error {
 	launcher.jnlp = jnlpFile
 	launcher.filedata = filedata
 	launcher.resourceDir = launcher.generateResourcesDirName(filedata)
-	launcher.gui.SetTitle(launcher.jnlp.Information.Title)
+	launcher.gui.SetTitle(launcher.jnlp.Title())
 	if err := launcher.saveOriginalFile(); err != nil {
 		return err
 	}

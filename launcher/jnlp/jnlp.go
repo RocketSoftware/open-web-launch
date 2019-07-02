@@ -223,3 +223,10 @@ func (jnlp *JNLP) getNativeLibs() ([]string, error) {
 	}
 	return urls, nil
 }
+
+func (jnlp *JNLP) Title() string {
+	if jnlp.Information != nil {
+		return jnlp.Information.Title
+	}
+	return ""
+}
