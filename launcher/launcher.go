@@ -18,8 +18,8 @@ type Launcher interface {
 	SetOptions(options *Options)
 	Terminate()
 	CheckPlatform() error
-	UninstallByFilename(filename string) error
-	UninstallByURL(url string) error
+	UninstallByFilename(filename string, showGUI bool) error
+	UninstallByURL(url string, showGUI bool) error
 }
 
 type Options struct {

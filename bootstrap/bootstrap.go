@@ -18,9 +18,10 @@ import (
 )
 
 var (
-	javaDir string
+	javaDir     string
 	showConsole bool
-	uninstall bool
+	uninstall   bool
+	showGUI     bool
 )
 
 var helpOptions = []string{"-help", "--help", "/help", "-?", "/?"}
@@ -51,6 +52,7 @@ func Run(productName, productTitle, productVersion string) {
 	flag.BoolVar(&showConsole, "showconsole", false, "show Java console")
 	flag.StringVar(&javaDir, "javadir", "", "Java folder that should be used for starting a Java Web Start application")
 	flag.BoolVar(&uninstall, "uninstall", false, "uninstall a specific Java Web Start application")
+	flag.BoolVar(&showGUI, "gui", false, "show GUI")
 	flag.Usage = usage
 	flag.Parse()
 	argCount := flag.NArg()
@@ -60,7 +62,7 @@ func Run(productName, productTitle, productVersion string) {
 		handleURLOrFilename(filenameOrURL, nil, productWorkDir, productTitle)
 	} else if argCount == 1 && uninstall {
 		filenameOrURL := flag.Arg(0)
-		handleUninstallCommand(filenameOrURL, productWorkDir, productTitle)
+		handleUninstallCommand(filenameOrURL, showGUI, productWorkDir, productTitle)
 	} else if argCount == 1 {
 		filenameOrURL := flag.Arg(0)
 		options := &launcher.Options{}
@@ -150,7 +152,7 @@ func listenForMessage(options *launcher.Options, productWorkDir string, productT
 	}
 }
 
-func handleUninstallCommand(filenameOrURL string, productWorkDir string, productTitle string) {
+func handleUninstallCommand(filenameOrURL string, showGUI bool, productWorkDir string, productTitle string) {
 	myLauncher, byURL, err := launcher.FindLauncherForURLOrFilename(filenameOrURL)
 	if err != nil {
 		log.Fatal(err)
@@ -158,27 +160,26 @@ func handleUninstallCommand(filenameOrURL string, productWorkDir string, product
 	myLauncher.SetWorkDir(productWorkDir)
 	myLauncher.SetWindowTitle(productTitle)
 	if byURL {
-		if err := myLauncher.UninstallByURL(filenameOrURL); err != nil {
+		if err := myLauncher.UninstallByURL(filenameOrURL, showGUI); err != nil {
 			log.Println(err)
 			return
 		}
 	} else {
-		if err := myLauncher.UninstallByFilename(filenameOrURL); err != nil {
+		if err := myLauncher.UninstallByFilename(filenameOrURL, showGUI); err != nil {
 			log.Println(err)
 			return
 		}
 	}
 }
 
-
 func isFlagSet(flagName string) bool {
 	found := false
-    flag.Visit(func(f *flag.Flag) {
-        if f.Name == flagName {
-            found = true
-        }
-    })
-    return found
+	flag.Visit(func(f *flag.Flag) {
+		if f.Name == flagName {
+			found = true
+		}
+	})
+	return found
 }
 
 func buildUsageText(productTitle, productVersion string) string {
@@ -203,5 +204,6 @@ func buildUsageText(productTitle, productVersion string) string {
 
 func showUsage(productTitle, productVersion string) {
 	text := buildUsageText(productTitle, productVersion)
+	fmt.Printf(text)
 	utils.ShowUsage(productTitle, productVersion, text)
 }
