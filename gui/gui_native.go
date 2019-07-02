@@ -158,16 +158,24 @@ func (gui *NativeGUI) updateFn(w *nucular.Window) {
 
 	w.Row(12).Dynamic(1)
 	progress := int(atomic.LoadInt32(&gui.progress))
-	w.Progress(&progress, gui.progressMax.Load().(int), false)
+	progressMax := gui.progressMax.Load().(int)
+	w.Progress(&progress, progressMax, false)
 
 	w.Row(10).Dynamic(1)
 	w.Spacing(1)
 
 	w.Row(30).Dynamic(5)
 	w.Spacing(4)
-	if w.Button(label.TA("Cancel", "CC"), false) {
-		log.Println("cancel button pressed, closing window...")
-		go gui.cancel(w)
+	if progress < progressMax {
+		if w.Button(label.TA("Cancel", "CC"), false) {
+			log.Println("cancel button pressed, closing window...")
+			go gui.cancel(w)
+		}
+	} else {
+		if w.Button(label.TA("Close", "CC"), false) {
+			log.Println("close button pressed, closing window...")
+			go gui.cancel(w)
+		}
 	}
 }
 
