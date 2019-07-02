@@ -21,9 +21,6 @@ func (launcher *Launcher) UninstallByFilename(filename string, showGUI bool) err
 	wg.Add(1)
 	go func() {
 		defer func() {
-			if err == nil {
-				launcher.gui.Terminate()
-			}
 			wg.Done()
 		}()
 		launcher.gui.WaitForWindow()
@@ -54,9 +51,6 @@ func (launcher *Launcher) UninstallByURL(url string, showGUI bool) error {
 	wg.Add(1)
 	go func() {
 		defer func() {
-			if err == nil {
-				launcher.gui.Terminate()
-			}
 			wg.Done()
 		}()
 		launcher.gui.WaitForWindow()
