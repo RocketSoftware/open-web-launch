@@ -18,7 +18,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/rocketsoftware/open-web-launch/gui"
-	"github.com/rocketsoftware/open-web-launch/java"
+	"github.com/rocketsoftware/open-web-launch/settings"
 	"github.com/rocketsoftware/open-web-launch/utils"
 	"github.com/rocketsoftware/open-web-launch/utils/download"
 	"github.com/rocketsoftware/open-web-launch/verifier"
@@ -139,18 +139,18 @@ func (launcher *Launcher) Terminate() {
 }
 
 func (launcher *Launcher) CheckPlatform() error {
-	if err := java.EnsureJavaExecutableAvailability(); err != nil {
+	if err := settings.EnsureJavaExecutableAvailability(); err != nil {
 		return errors.Wrap(err, "java executable wasn't found")
 	}
-	if err := java.EnsureJARSignerAvailability(); err != nil {
+	if err := settings.EnsureJARSignerAvailability(); err != nil {
 		log.Printf("%s, JAR verification will be skipped\n", err)
 	}
-	javaVersion, err := java.Version()
+	javaVersion, err := settings.JavaVersion()
 	if err != nil {
 		return errors.Wrap(err, "unable to obtain java version")
 	}
 	log.Println(javaVersion)
-	log.Printf("DisableVerification is %v", java.IsVerificationDisabled())
+	log.Printf("DisableVerification is %v", settings.IsVerificationDisabled())
 	return nil
 }
 
@@ -269,7 +269,7 @@ func (launcher *Launcher) command() (*exec.Cmd, error) {
 		javaArgs = append(javaArgs, fmt.Sprintf("-D%s=%s", property.Name, property.Value))
 	}
 	if len(nativeLibPaths) > 0 {
-		javaArgs = append(javaArgs, fmt.Sprintf("-Djava.library.path=%s", strings.Join(nativeLibPaths, ClassPathSeparator)))
+		javaArgs = append(javaArgs, fmt.Sprintf("-Dsettings.library.path=%s", strings.Join(nativeLibPaths, ClassPathSeparator)))
 	}
 	if splash := launcher.getSplashScreen(); splash != "" {
 		javaArgs = append(javaArgs, fmt.Sprintf("-splash:%s", splash))
@@ -285,7 +285,7 @@ func (launcher *Launcher) command() (*exec.Cmd, error) {
 		return nil, errors.New("<application-desc> tag wasn't found in JNLP file")
 	}
 	log.Printf("java arguments %s\n", strings.Join(javaArgs, " "))
-	cmd := exec.Command(java.Java(), javaArgs...)
+	cmd := exec.Command(settings.Java(), javaArgs...)
 	if launcher.options != nil && launcher.options.IsRunningFromBrowser {
 		utils.BreakAwayFromParent(cmd)
 	}
@@ -336,7 +336,7 @@ func (launcher *Launcher) run(filedata []byte) error {
 	if err := launcher.createShortcuts(); err != nil {
 		return err
 	}
-	if java.AddAppToControlPanel() {
+	if settings.AddAppToControlPanel() {
 		if err := launcher.installApp(); err != nil {
 			return err
 		}
@@ -431,7 +431,7 @@ func (launcher *Launcher) downloadJARs() error {
 			if launcher.gui.Closed() {
 				return
 			}
-			if !java.IsVerificationDisabled() {
+			if !settings.IsVerificationDisabled() {
 				if err := verifier.VerifyWithJARSigner(filename, false); err != nil {
 					errChan <- errors.Wrapf(err, "JAR verification failed %s", filepath.Base(filename))
 					return
@@ -526,7 +526,7 @@ func (launcher *Launcher) downloadExtensions() error {
 					return
 				}
 				launcher.gui.SendTextMessage(fmt.Sprintf("Downloading JAR %s finished\n", path.Base(jarURL)))
-				if !java.IsVerificationDisabled() {
+				if !settings.IsVerificationDisabled() {
 					if err := verifier.VerifyWithJARSigner(filename, false); err != nil {
 						errChan <- errors.Wrapf(err, "JAR verification failed %s", filepath.Base(filename))
 						return

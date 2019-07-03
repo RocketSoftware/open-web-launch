@@ -1,4 +1,4 @@
-package java
+package settings
 
 import (
 	"fmt"
@@ -78,9 +78,9 @@ func AddAppToControlPanel() bool {
 	return addAppToControlPanel
 }
 
-// Version returns detailed Java version information, e.g.
+// JavaVersion returns detailed Java version information, e.g.
 // java version "1.8.0_171" Java(TM) SE Runtime Environment (build 1.8.0_171-b11) Java HotSpot(TM) 64-Bit Server VM (build 25.171-b11, mixed mode)
-func Version() (string, error) {
+func JavaVersion() (string, error) {
 	cmd := exec.Command(javaExecutable, "-version")
 	utils.HideWindow(cmd)
 	outputBytes, err := cmd.CombinedOutput()

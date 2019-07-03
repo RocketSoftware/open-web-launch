@@ -11,7 +11,7 @@ import (
 	"runtime"
 
 	"github.com/pkg/errors"
-	"github.com/rocketsoftware/open-web-launch/java"
+	"github.com/rocketsoftware/open-web-launch/settings"
 	"github.com/rocketsoftware/open-web-launch/launcher"
 	"github.com/rocketsoftware/open-web-launch/messaging"
 	"github.com/rocketsoftware/open-web-launch/utils"
@@ -68,13 +68,13 @@ func Run(productName, productTitle, productVersion string) {
 		options := &launcher.Options{}
 		if isFlagSet("javadir") {
 			var err error
-			if javaDir, err = java.UseJavaDir(javaDir); err != nil {
+			if javaDir, err = settings.UseJavaDir(javaDir); err != nil {
 				log.Fatal(err)
 			}
 			options.JavaDir = javaDir
 		}
 		if isFlagSet("showconsole") {
-			java.ShowConsole()
+			settings.ShowConsole()
 			options.ShowConsole = true
 		}
 		handleURLOrFilename(filenameOrURL, options, productWorkDir, productTitle)

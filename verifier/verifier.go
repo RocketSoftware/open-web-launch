@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/rocketsoftware/open-web-launch/java"
+	"github.com/rocketsoftware/open-web-launch/settings"
 	"github.com/rocketsoftware/open-web-launch/utils"
 	"github.com/pkg/errors"
 )
@@ -19,7 +19,7 @@ const (
 )
 
 func VerifyWithJARSigner(jar string, verbose bool) error {
-	jarSignerExecutable := java.JARSigner()
+	jarSignerExecutable := settings.JARSigner()
 	if jarSignerExecutable == "" {
 		return nil
 	}

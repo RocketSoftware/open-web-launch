@@ -1,4 +1,4 @@
-package java
+package settings
 
 import (
 	"path/filepath"
