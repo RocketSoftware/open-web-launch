@@ -336,8 +336,10 @@ func (launcher *Launcher) run(filedata []byte) error {
 	if err := launcher.createShortcuts(); err != nil {
 		return err
 	}
-	if err := launcher.installApp(); err != nil {
-		return err
+	if java.AddAppToControlPanel() {
+		if err := launcher.installApp(); err != nil {
+			return err
+		}
 	}
 	if launcher.gui.Closed() {
 		return errCancelled
@@ -779,6 +781,7 @@ func (launcher *Launcher) installApp() error {
 		URL: url,
 		Publisher: info.Vendor,
 	}
+	log.Printf("adding app into Control Panel")
 	if err := utils.InstallApp(app); err != nil {
 		return errors.Wrap(err, "unable to install app into control panel")
 	}

@@ -18,6 +18,7 @@ var javaExecutable string
 var javaSource string
 var jarSignerExecutable string
 var disableVerification bool
+var addAppToControlPanel bool
 
 func EnsureJavaExecutableAvailability() error {
 	if filepath.IsAbs(javaExecutable) {
@@ -71,6 +72,10 @@ func JavaSource() string {
 
 func IsVerificationDisabled() bool {
 	return disableVerification
+}
+
+func AddAppToControlPanel() bool {
+	return addAppToControlPanel
 }
 
 // Version returns detailed Java version information, e.g.
@@ -136,4 +141,5 @@ func init() {
 	javaExecutable = getJavaExecutable()
 	jarSignerExecutable = getJARSignerExecutable()
 	disableVerification = getDisableVerificationSetting()
+	addAppToControlPanel = getAddAppToControlPanelSetting()
 }

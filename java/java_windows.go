@@ -50,6 +50,10 @@ func getShowConsoleSettingFromRootKey(rootKey registry.Key) (uint64, error) {
 	return getUInt64ValueFromRootKey(rootKey, "ShowConsole")
 }
 
+func getAddAppToControlPanelSettingFromRootKey(rootKey registry.Key) (uint64, error) {
+	return getUInt64ValueFromRootKey(rootKey, "AddToControlPanel")
+}
+
 func getDisableVerificationSettingFromRootKey(rootKey registry.Key) (uint64, error) {
 	return getUInt64ValueFromRootKey(rootKey, "DisableVerification")
 }
@@ -157,4 +161,15 @@ func getJARSignerExecutable() string {
 
 func getJARSignerExecutableUsingJavaDir(dir string) string {
 	return filepath.Join(dir, "bin", "jarsigner.exe")
+}
+
+func getAddAppToControlPanelSetting() bool {
+	addAppToControlPanel, err := getAddAppToControlPanelSettingFromRootKey(registry.CURRENT_USER)
+	if err != nil {
+		addAppToControlPanel, err = getAddAppToControlPanelSettingFromRootKey(registry.LOCAL_MACHINE)
+	}
+	if err != nil {
+		return false
+	}
+	return addAppToControlPanel == 1
 }
