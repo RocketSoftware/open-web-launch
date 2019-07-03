@@ -59,3 +59,11 @@ func RemoveStartMenuFolder(folder string) error {
 func ShowUsage(productTitle, productVersion, text string) {
 	fmt.Fprintf(os.Stderr, text)
 }
+
+func InstallApp(app *AppInfo) error {
+	return nil
+}
+
+func UninstallApp(title string) error {
+	return nil
+}

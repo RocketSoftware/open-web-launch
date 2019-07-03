@@ -86,6 +86,7 @@ type Information struct {
 	Desktop        *xml.Name       `xml:"desktop"`                   // Can be used to indicate the RIA's preference for putting a shortcut on the user's desktop
 	Menu           *Menu           `xml:"menu,omitempty"`            // Can be used to indicate the RIA's preference for putting a menu item in the user's start menus
 	OfflineAllowed *OfflineAllowed `xml:"offline-allowed,omitempty"` // Indicates that this application can operate when the client system is disconnected from the network.
+	Version 		string 			`xml:"version,omitempty"`        // Application version
 }
 
 // Homepage of the RIA

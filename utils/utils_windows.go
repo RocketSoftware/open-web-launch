@@ -13,6 +13,7 @@ import (
 
 	ole "github.com/go-ole/go-ole"
 	"github.com/go-ole/go-ole/oleutil"
+	"golang.org/x/sys/windows/registry"
 	"github.com/golang/freetype/truetype"
 	"golang.org/x/image/font"
 
@@ -329,4 +330,44 @@ func ShowUsage(productTitle, productVersion, text string) {
 		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(caption))),
 		uintptr(cMB_ICONINFORMATION),
 	)
+}
+
+func InstallApp(app *AppInfo) error {
+	key, _, err := registry.CreateKey(registry.CURRENT_USER, `Software\Microsoft\Windows\CurrentVersion\Uninstall\`+app.Title, registry.SET_VALUE)
+	if err != nil {
+		return err
+	}
+	defer key.Close()
+	if err := key.SetStringValue("DisplayName", app.Title); err != nil {
+		return err
+	}
+	if err := key.SetStringValue("UninstallString", app.UninstallString); err != nil {
+		return err
+	}
+	if err := key.SetStringValue("DisplayIcon", app.Icon); err != nil {
+		return err
+	}
+	if err := key.SetStringValue("Version", app.Version); err != nil {
+		return err
+	}
+	if err := key.SetStringValue("URLInfoAbout", app.URL); err != nil {
+		return err
+	}
+	if err := key.SetStringValue("Publisher", app.Publisher); err != nil {
+		return err
+	}
+	if err := key.SetDWordValue("NoModify", 1); err != nil {
+		return err
+	}
+	if err := key.SetDWordValue("NoRepair", 1); err != nil {
+		return err
+	}
+	return nil
+}
+
+func UninstallApp(title string) error {
+	if err := registry.DeleteKey(registry.CURRENT_USER, `Software\Microsoft\Windows\CurrentVersion\Uninstall\`+title); err != nil {
+		return err
+	}
+	return nil
 }

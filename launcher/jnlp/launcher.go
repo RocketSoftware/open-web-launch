@@ -336,6 +336,9 @@ func (launcher *Launcher) run(filedata []byte) error {
 	if err := launcher.createShortcuts(); err != nil {
 		return err
 	}
+	if err := launcher.installApp(); err != nil {
+		return err
+	}
 	if launcher.gui.Closed() {
 		return errCancelled
 	}
@@ -759,6 +762,37 @@ func (launcher *Launcher) generateResourcesDirName(filedata []byte) string {
 
 func (launcher *Launcher) getOriginalFilePath() string {
 	return filepath.Join(launcher.resourceDir, "original.jnlp")
+}
+
+func (launcher *Launcher) installApp() error {
+	info := launcher.jnlp.Information
+	uninstallString := os.Args[0] + " -uninstall -gui " + launcher.getOriginalFilePath()
+	url := ""
+	if info.Homepage != nil {
+		url = info.Homepage.Href
+	}
+	app := &utils.AppInfo{
+		Title: info.Title,
+		UninstallString: uninstallString,
+		Icon: launcher.findShortcutIcon(),
+		Version: info.Version,
+		URL: url,
+		Publisher: info.Vendor,
+	}
+	if err := utils.InstallApp(app); err != nil {
+		return errors.Wrap(err, "unable to install app into control panel")
+	}
+	return nil
+}
+
+func (launcher *Launcher) uninstallApp(jnlp *JNLP) error {
+	title := jnlp.Title()
+	if title != "" {
+		if err := utils.UninstallApp(title); err != nil {
+			return errors.Wrap(err, "unable to uninstall app from control panel")
+		}
+	}
+	return nil
 }
 
 func (launcher *Launcher) saveOriginalFile() error {

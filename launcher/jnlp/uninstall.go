@@ -75,10 +75,12 @@ func (launcher *Launcher) uninstallUsingFileData(filedata []byte) error {
 		return errors.Wrap(err, "parsing JNLP")
 	}
 	launcher.gui.SetTitle(jnlpFile.Title())
-	launcher.gui.SetProgressMax(2)
+	launcher.gui.SetProgressMax(3)
 	launcher.removeShortcuts(jnlpFile)
 	launcher.gui.ProgressStep()
 	launcher_utils.RemoveResourceDir(launcher.WorkDir, filedata)
+	launcher.gui.ProgressStep()
+	launcher.uninstallApp(jnlpFile)
 	launcher.gui.ProgressStep()
 	launcher.gui.SendTextMessage("Uninstall complete")
 	return nil
