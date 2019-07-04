@@ -1,4 +1,4 @@
-package java
+package settings
 
 import (
 	"fmt"
@@ -18,6 +18,7 @@ var javaExecutable string
 var javaSource string
 var jarSignerExecutable string
 var disableVerification bool
+var addAppToControlPanel bool
 
 func EnsureJavaExecutableAvailability() error {
 	if filepath.IsAbs(javaExecutable) {
@@ -73,9 +74,13 @@ func IsVerificationDisabled() bool {
 	return disableVerification
 }
 
-// Version returns detailed Java version information, e.g.
+func AddAppToControlPanel() bool {
+	return addAppToControlPanel
+}
+
+// JavaVersion returns detailed Java version information, e.g.
 // java version "1.8.0_171" Java(TM) SE Runtime Environment (build 1.8.0_171-b11) Java HotSpot(TM) 64-Bit Server VM (build 25.171-b11, mixed mode)
-func Version() (string, error) {
+func JavaVersion() (string, error) {
 	cmd := exec.Command(javaExecutable, "-version")
 	utils.HideWindow(cmd)
 	outputBytes, err := cmd.CombinedOutput()
@@ -136,4 +141,5 @@ func init() {
 	javaExecutable = getJavaExecutable()
 	jarSignerExecutable = getJARSignerExecutable()
 	disableVerification = getDisableVerificationSetting()
+	addAppToControlPanel = getAddAppToControlPanelSetting()
 }

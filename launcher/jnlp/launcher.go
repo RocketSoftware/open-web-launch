@@ -16,12 +16,12 @@ import (
 	"github.com/rocketsoftware/open-web-launch/launcher"
 	launcher_utils "github.com/rocketsoftware/open-web-launch/launcher/utils"
 
+	"github.com/pkg/errors"
 	"github.com/rocketsoftware/open-web-launch/gui"
-	"github.com/rocketsoftware/open-web-launch/java"
+	"github.com/rocketsoftware/open-web-launch/settings"
 	"github.com/rocketsoftware/open-web-launch/utils"
 	"github.com/rocketsoftware/open-web-launch/utils/download"
 	"github.com/rocketsoftware/open-web-launch/verifier"
-	"github.com/pkg/errors"
 )
 
 var errCancelled = errors.New("cancelled by user")
@@ -37,7 +37,7 @@ type Launcher struct {
 	relevantResources []*Resources
 	codebaseURL       *url.URL
 	cmd               *exec.Cmd
-	gui               gui.GUI
+	gui               *gui.GUI
 	options           *launcher.Options
 	cert              []byte
 }
@@ -46,7 +46,6 @@ type Launcher struct {
 func NewLauncher() *Launcher {
 	return &Launcher{
 		WorkDir: ".",
-		gui:     gui.New(),
 	}
 }
 
@@ -63,24 +62,32 @@ func (launcher *Launcher) RunByURL(url string) error {
 	var err error
 	log.Printf("Processing %s\n", url)
 	url = launcher.normalizeURL(url)
+	launcher.gui = gui.New()
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer func() {
+			if err == nil {
+				launcher.gui.Terminate()
+			}
+			wg.Done()
+		}()
+		launcher.gui.WaitForWindow()
+		var filedata []byte
+		if filedata, err = download.ToMemory(url); err != nil {
+			launcher.gui.SendErrorMessage(err)
+			return
+		}
+		if err = launcher.run(filedata); err != nil {
+			launcher.gui.SendErrorMessage(err)
+			return
+		}
+	}()
 	if err = launcher.gui.Start(launcher.WindowTitle); err != nil {
 		return err
 	}
-	defer func() {
-		if err == nil || err == errCancelled {
-			launcher.gui.Terminate()
-		}
-	}()
-	var filedata []byte
-	if filedata, err = download.ToMemory(url); err != nil {
-		launcher.gui.SendErrorMessage(err)
-		return err
-	}
-	if err = launcher.run(filedata); err != nil {
-		launcher.gui.SendErrorMessage(err)
-		return err
-	}
-	return nil
+	wg.Wait()
+	return err
 }
 
 func (launcher *Launcher) SetOptions(options *launcher.Options) {
@@ -91,54 +98,59 @@ func (launcher *Launcher) SetOptions(options *launcher.Options) {
 func (launcher *Launcher) RunByFilename(filename string) error {
 	var err error
 	log.Printf("Processing %s\n", filename)
+	launcher.gui = gui.New()
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer func() {
+			if err == nil {
+				launcher.gui.Terminate()
+			}
+			wg.Done()
+		}()
+		launcher.gui.WaitForWindow()
+		var filedata []byte
+		if filedata, err = ioutil.ReadFile(filename); err != nil {
+			launcher.gui.SendErrorMessage(err)
+			return
+		}
+		filedata, err = launcher.checkForUpdate(filedata)
+		if err != nil {
+			launcher.gui.SendErrorMessage(err)
+			return
+		}
+		if err = launcher.run(filedata); err != nil {
+			launcher.gui.SendErrorMessage(err)
+			return
+		}
+	}()
 	if err = launcher.gui.Start(launcher.WindowTitle); err != nil {
 		return err
 	}
-	defer func() {
-		if err == nil || err == errCancelled {
-			launcher.gui.Terminate()
-		}
-	}()
-	var filedata []byte
-	if filedata, err = ioutil.ReadFile(filename); err != nil {
-		launcher.gui.SendErrorMessage(err)
-		return err
-	}
-	filedata, err = launcher.checkForUpdate(filedata)
-	if err != nil {
-		launcher.gui.SendErrorMessage(err)
-		return err
-	}
-	if err = launcher.run(filedata); err != nil {
-		launcher.gui.SendErrorMessage(err)
-		return err
-	}
-	return nil
-}
-
-// Wait waits until JNLP Launcher gracefully terminated
-func (launcher *Launcher) Wait() {
-	launcher.gui.Wait()
+	wg.Wait()
+	return err
 }
 
 // Terminate forces GUI to close
 func (launcher *Launcher) Terminate() {
-	launcher.gui.Terminate()
+	if launcher.gui != nil {
+		launcher.gui.Terminate()
+	}
 }
 
 func (launcher *Launcher) CheckPlatform() error {
-	if err := java.EnsureJavaExecutableAvailability(); err != nil {
+	if err := settings.EnsureJavaExecutableAvailability(); err != nil {
 		return errors.Wrap(err, "java executable wasn't found")
 	}
-	if err := java.EnsureJARSignerAvailability(); err != nil {
+	if err := settings.EnsureJARSignerAvailability(); err != nil {
 		log.Printf("%s, JAR verification will be skipped\n", err)
 	}
-	javaVersion, err := java.Version()
+	javaVersion, err := settings.JavaVersion()
 	if err != nil {
 		return errors.Wrap(err, "unable to obtain java version")
 	}
 	log.Println(javaVersion)
-	log.Printf("DisableVerification is %v", java.IsVerificationDisabled())
+	log.Printf("DisableVerification is %v", settings.IsVerificationDisabled())
 	return nil
 }
 
@@ -257,7 +269,7 @@ func (launcher *Launcher) command() (*exec.Cmd, error) {
 		javaArgs = append(javaArgs, fmt.Sprintf("-D%s=%s", property.Name, property.Value))
 	}
 	if len(nativeLibPaths) > 0 {
-		javaArgs = append(javaArgs, fmt.Sprintf("-Djava.library.path=%s", strings.Join(nativeLibPaths, ClassPathSeparator)))
+		javaArgs = append(javaArgs, fmt.Sprintf("-Dsettings.library.path=%s", strings.Join(nativeLibPaths, ClassPathSeparator)))
 	}
 	if splash := launcher.getSplashScreen(); splash != "" {
 		javaArgs = append(javaArgs, fmt.Sprintf("-splash:%s", splash))
@@ -273,7 +285,7 @@ func (launcher *Launcher) command() (*exec.Cmd, error) {
 		return nil, errors.New("<application-desc> tag wasn't found in JNLP file")
 	}
 	log.Printf("java arguments %s\n", strings.Join(javaArgs, " "))
-	cmd := exec.Command(java.Java(), javaArgs...)
+	cmd := exec.Command(settings.Java(), javaArgs...)
 	if launcher.options != nil && launcher.options.IsRunningFromBrowser {
 		utils.BreakAwayFromParent(cmd)
 	}
@@ -301,7 +313,7 @@ func (launcher *Launcher) run(filedata []byte) error {
 	launcher.jnlp = jnlpFile
 	launcher.filedata = filedata
 	launcher.resourceDir = launcher.generateResourcesDirName(filedata)
-	launcher.gui.SetTitle(launcher.jnlp.Information.Title)
+	launcher.gui.SetTitle(launcher.jnlp.Title())
 	if err := launcher.saveOriginalFile(); err != nil {
 		return err
 	}
@@ -323,6 +335,11 @@ func (launcher *Launcher) run(filedata []byte) error {
 	launcher.removeOldShortcutsIfNeeded()
 	if err := launcher.createShortcuts(); err != nil {
 		return err
+	}
+	if settings.AddAppToControlPanel() {
+		if err := launcher.installApp(); err != nil {
+			return err
+		}
 	}
 	if launcher.gui.Closed() {
 		return errCancelled
@@ -382,7 +399,7 @@ func (launcher *Launcher) downloadJARs() error {
 	if err != nil {
 		return err
 	}
-	jars = append(jars, nativeLibJars...)	
+	jars = append(jars, nativeLibJars...)
 	jarDir, err := launcher.createDirForResourceFiles()
 	if err != nil {
 		return errors.Wrapf(err, "unable to create directory for jar files")
@@ -414,7 +431,7 @@ func (launcher *Launcher) downloadJARs() error {
 			if launcher.gui.Closed() {
 				return
 			}
-			if !java.IsVerificationDisabled() {
+			if !settings.IsVerificationDisabled() {
 				if err := verifier.VerifyWithJARSigner(filename, false); err != nil {
 					errChan <- errors.Wrapf(err, "JAR verification failed %s", filepath.Base(filename))
 					return
@@ -509,7 +526,7 @@ func (launcher *Launcher) downloadExtensions() error {
 					return
 				}
 				launcher.gui.SendTextMessage(fmt.Sprintf("Downloading JAR %s finished\n", path.Base(jarURL)))
-				if !java.IsVerificationDisabled() {
+				if !settings.IsVerificationDisabled() {
 					if err := verifier.VerifyWithJARSigner(filename, false); err != nil {
 						errChan <- errors.Wrapf(err, "JAR verification failed %s", filepath.Base(filename))
 						return
@@ -583,7 +600,7 @@ func (launcher *Launcher) estimateProgressMax() error {
 		return err
 	}
 	extensionJars := launcher.getExtensionJars()
-	progressMax := 3*(len(jars) + len(nativeLibJars)) + len(extensionJars) + 1
+	progressMax := 3*(len(jars)+len(nativeLibJars)) + len(extensionJars) + 1
 	launcher.gui.SetProgressMax(progressMax)
 	return nil
 }
@@ -747,6 +764,38 @@ func (launcher *Launcher) generateResourcesDirName(filedata []byte) string {
 
 func (launcher *Launcher) getOriginalFilePath() string {
 	return filepath.Join(launcher.resourceDir, "original.jnlp")
+}
+
+func (launcher *Launcher) installApp() error {
+	info := launcher.jnlp.Information
+	uninstallString := os.Args[0] + " -uninstall -gui " + launcher.getOriginalFilePath()
+	url := ""
+	if info.Homepage != nil {
+		url = info.Homepage.Href
+	}
+	app := &utils.AppInfo{
+		Title: info.Title,
+		UninstallString: uninstallString,
+		Icon: launcher.findShortcutIcon(),
+		Version: info.Version,
+		URL: url,
+		Publisher: info.Vendor,
+	}
+	log.Printf("adding app into Control Panel")
+	if err := utils.InstallApp(app); err != nil {
+		return errors.Wrap(err, "unable to install app into control panel")
+	}
+	return nil
+}
+
+func (launcher *Launcher) uninstallApp(jnlp *JNLP) error {
+	title := jnlp.Title()
+	if title != "" {
+		if err := utils.UninstallApp(title); err != nil {
+			return errors.Wrap(err, "unable to uninstall app from control panel")
+		}
+	}
+	return nil
 }
 
 func (launcher *Launcher) saveOriginalFile() error {

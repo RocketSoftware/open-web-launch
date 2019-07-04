@@ -72,3 +72,12 @@ func OpenOrCreateProductLogFile(productLogFile string) (*os.File, error) {
 	return os.OpenFile(productLogFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 
 }
+
+type AppInfo struct {
+	Title string
+	UninstallString string
+	Icon string
+	Version string
+	URL string
+	Publisher string
+}

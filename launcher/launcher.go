@@ -16,17 +16,16 @@ type Launcher interface {
 	RunByFilename(filename string) error
 	RunByURL(url string) error
 	SetOptions(options *Options)
-	Wait()
 	Terminate()
 	CheckPlatform() error
-	UninstallByFilename(filename string) error
-	UninstallByURL(url string) error
+	UninstallByFilename(filename string, showGUI bool) error
+	UninstallByURL(url string, showGUI bool) error
 }
 
 type Options struct {
 	IsRunningFromBrowser bool
 	JavaDir              string
-	ShowConsole			 bool
+	ShowConsole          bool
 }
 
 func RegisterProtocol(scheme string, launcher Launcher) {
