@@ -112,6 +112,10 @@ This command allows to uninstall a specific Java Web Start application.
 
 `openweblaunch.exe -uninstall <jnlp reference>`
 
+`-gui` option together with `-uninstall` allows to show GUI during uninstall.
+
+`openweblaunch.exe -uninstall -gui <jnlp reference>`
+
 **-JavaDir**
 
 This command allows to pass a specific Java that should be used for starting a Java Web Start application.
@@ -176,10 +180,11 @@ If none of the other options result in a Java version that it can use, Open Web 
 |**information**| | | |
 | |icon| | |
 | |shortcut| | |
-|**title**| | | |
+| |title| | | |
 | |vendor| | |
 | |homepage| | |
 | |description| | |
+| |version| |App version like 1.0.1. The tag is Open Web Launch extension|
 |**application-desc**| | | |
 |**resources**| | | |
 | | |os|windows, darwin, linux|

@@ -11,9 +11,9 @@ import (
 	"runtime"
 
 	"github.com/pkg/errors"
-	"github.com/rocketsoftware/open-web-launch/settings"
 	"github.com/rocketsoftware/open-web-launch/launcher"
 	"github.com/rocketsoftware/open-web-launch/messaging"
+	"github.com/rocketsoftware/open-web-launch/settings"
 	"github.com/rocketsoftware/open-web-launch/utils"
 )
 
@@ -197,6 +197,8 @@ func buildUsageText(productTitle, productVersion string) string {
 	text += fmt.Sprintf("      show Java console\n")
 	text += fmt.Sprintf("  -uninstall\n")
 	text += fmt.Sprintf("      uninstall app\n")
+	text += fmt.Sprintf("  -gui\n")
+	text += fmt.Sprintf("      show GUI, uninstall only\n")
 	text += fmt.Sprintf("  -help\n")
 	text += fmt.Sprintf("      show help\n")
 	return text
