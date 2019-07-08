@@ -3,6 +3,7 @@ package settings
 import (
 	"path/filepath"
 
+	"github.com/pkg/errors"
 	"golang.org/x/sys/windows/registry"
 )
 
@@ -129,6 +130,13 @@ func getJavaExecutable() string {
 		}
 		return java
 	}
+	if strategy == "Registry" {
+		java, err := getJavaExecutableUsingRegistry(showConsole)
+		if err != nil {
+			return getDefaultJava(showConsole)
+		}
+		return java
+	}
 	javadir, err := getJavaDirFromRegistry()
 	if err == nil {
 		if showConsole {
@@ -150,6 +158,49 @@ func getJavaExecutableUsingJavaDir(dir string) string {
 		return filepath.Join(dir, "bin", "java.exe")
 	}
 	return filepath.Join(dir, "bin", "javaw.exe")
+}
+
+func getJavaExecutableUsingRegistry(showConsole bool) (string, error) {
+	javaSoftKeyName := `SOFTWARE\JavaSoft\`
+	jdkKeyName := javaSoftKeyName + "Java Development Kit"
+	jreKeyName := javaSoftKeyName + "Java Runtime Environment"
+	var java string
+	var err error
+	java, err = getJavaExecutableUsingRegistryKey(jdkKeyName, showConsole)
+	if err != nil {
+		java, err = getJavaExecutableUsingRegistryKey(jreKeyName, showConsole)
+	}
+	return java, err
+}
+
+func getJavaExecutableUsingRegistryKey(keyName string, showConsole bool) (string, error) {
+	key, err := registry.OpenKey(registry.LOCAL_MACHINE, keyName, registry.READ)
+	if err != nil {
+		return "", err
+	}
+	defer key.Close()
+	subKeyNames, err := key.ReadSubKeyNames(1)
+	if err != nil {
+		return "", err
+	}
+	if len(subKeyNames) == 0 {
+		return "", errors.Errorf("no Java installations found under %s registry key", keyName)
+	}
+	subKeyName := keyName + `\` + subKeyNames[0]
+	subKey, err := registry.OpenKey(registry.LOCAL_MACHINE, subKeyName, registry.QUERY_VALUE)
+	if err != nil {
+		return "", err
+	}
+	defer subKey.Close()
+	javaHome, _, err := subKey.GetStringValue("JavaHome")
+	if err != nil {
+		return "", err
+	}
+	javaSource = `Windows Registry - LOCAL_MACHINE\` + subKeyName + `\JavaHome`
+	if showConsole {
+		return filepath.Join(javaHome, "bin", "java.exe"), nil
+	}
+	return filepath.Join(javaHome, "bin", "javaw.exe"), nil
 }
 
 func getJARSignerExecutable() string {
