@@ -150,6 +150,12 @@ func (launcher *Launcher) CheckPlatform() error {
 		return errors.Wrap(err, "unable to obtain java version")
 	}
 	log.Println(javaVersion)
+	major, minor, err := settings.NumericJavaVersion()
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	log.Printf("Detected Java version major=%d minor=%d", major, minor)
 	log.Printf("DisableVerification is %v", settings.IsVerificationDisabled())
 	return nil
 }

@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"strconv"
+	"strings"
 
 	"github.com/rocketsoftware/open-web-launch/utils"
 
@@ -85,11 +87,51 @@ func JavaVersion() (string, error) {
 	utils.HideWindow(cmd)
 	outputBytes, err := cmd.CombinedOutput()
 	if err != nil {
-		return "", errors.Wrap(err, "Unable to obtain Java version")
+		return "", errors.Wrap(err, "unable to obtain Java version")
 	}
 	re := regexp.MustCompile("[^!-~\t ]")
 	output := re.ReplaceAllLiteralString(string(outputBytes), " ")
 	return output, nil
+}
+
+// NumericJavaVersion returns major ans minor Java version
+func NumericJavaVersion() (major int, minor int, err error) {
+	defer func() {
+		if err != nil {
+			err = errors.Wrap(err, "unable to detect Java version")
+		}
+	}()
+	versionOutput, err := JavaVersion()
+	if err != nil {
+		return
+	}
+	firstQuoteIndex := strings.Index(versionOutput, `"`)
+	if firstQuoteIndex == -1 {
+		err = errors.Wrapf(err, "unable to locate Java version: double quote not found: %s", versionOutput)
+		return
+	}
+	secondQuoteIndex := strings.Index(versionOutput[firstQuoteIndex + 1:], `"`)
+	if secondQuoteIndex == -1 {
+		err = errors.Wrapf(err, "unable to locate Java version: second double quote not found: %s", versionOutput)
+		return
+	}
+	version := versionOutput[firstQuoteIndex+1:secondQuoteIndex+firstQuoteIndex+1]
+	parts := strings.Split(version, ".")
+	if len(parts) < 2 {
+		err = errors.Wrapf(err, "unable to parse Java version %s", version)
+		return
+	}
+	majorVer, err := strconv.ParseInt(parts[0], 10, 8)
+	if err != nil {
+		err = errors.Wrapf(err, "unable to parse major version %s", parts[0])
+		return
+	}
+	minorVer, err := strconv.ParseInt(parts[1], 10, 8)
+	if err != nil {
+		err = errors.Wrapf(err, "unable to parse minor version %s", parts[1])
+		return
+	}
+	return int(majorVer), int(minorVer), nil
 }
 
 func getJavaExecutableUsingJavaHome(showConsole bool) (string, error) {
