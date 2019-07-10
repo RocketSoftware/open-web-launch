@@ -21,6 +21,13 @@ var javaSource string
 var jarSignerExecutable string
 var disableVerification bool
 var addAppToControlPanel bool
+var currentJavaVersion *JavaVersion
+
+type Version struct {
+	Major       int
+	Minor       int
+	AllowHigher bool
+}
 
 func EnsureJavaExecutableAvailability() error {
 	if filepath.IsAbs(javaExecutable) {
@@ -80,9 +87,9 @@ func AddAppToControlPanel() bool {
 	return addAppToControlPanel
 }
 
-// JavaVersion returns detailed Java version information, e.g.
+// GetJavaVersionString returns detailed Java version information, e.g.
 // java version "1.8.0_171" Java(TM) SE Runtime Environment (build 1.8.0_171-b11) Java HotSpot(TM) 64-Bit Server VM (build 25.171-b11, mixed mode)
-func JavaVersion() (string, error) {
+func GetJavaVersionString() (string, error) {
 	cmd := exec.Command(javaExecutable, "-version")
 	utils.HideWindow(cmd)
 	outputBytes, err := cmd.CombinedOutput()
@@ -94,14 +101,23 @@ func JavaVersion() (string, error) {
 	return output, nil
 }
 
-// NumericJavaVersion returns major ans minor Java version
-func NumericJavaVersion() (major int, minor int, err error) {
+type JavaVersion struct {
+	Major       int
+	Minor       int
+	AllowHigher bool
+}
+
+// GetJavaVersion returns major ans minor Java version
+func GetJavaVersion() (javaVersion *JavaVersion, err error) {
 	defer func() {
 		if err != nil {
 			err = errors.Wrap(err, "unable to detect Java version")
 		}
 	}()
-	versionOutput, err := JavaVersion()
+	if currentJavaVersion != nil {
+		return currentJavaVersion, nil
+	}
+	versionOutput, err := GetJavaVersionString()
 	if err != nil {
 		return
 	}
@@ -110,28 +126,60 @@ func NumericJavaVersion() (major int, minor int, err error) {
 		err = errors.Wrapf(err, "unable to locate Java version: double quote not found: %s", versionOutput)
 		return
 	}
-	secondQuoteIndex := strings.Index(versionOutput[firstQuoteIndex + 1:], `"`)
+	secondQuoteIndex := strings.Index(versionOutput[firstQuoteIndex+1:], `"`)
 	if secondQuoteIndex == -1 {
 		err = errors.Wrapf(err, "unable to locate Java version: second double quote not found: %s", versionOutput)
 		return
 	}
-	version := versionOutput[firstQuoteIndex+1:secondQuoteIndex+firstQuoteIndex+1]
-	parts := strings.Split(version, ".")
+	version := versionOutput[firstQuoteIndex+1 : secondQuoteIndex+firstQuoteIndex+1]
+	javaVersion, err = ParseJavaVersion(version)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func ParseJavaVersion(version string) (*JavaVersion, error) {
+	allowHigher := false
+	ver := version
+	if strings.HasSuffix(version, "+") {
+		ver = strings.TrimSuffix(version, "+")
+		allowHigher = true
+	}
+	parts := strings.Split(ver, ".")
 	if len(parts) < 2 {
-		err = errors.Wrapf(err, "unable to parse Java version %s", version)
-		return
+		return nil, errors.Errorf("unable to parse Java version '%s'", version)
 	}
-	majorVer, err := strconv.ParseInt(parts[0], 10, 8)
+	major, err := strconv.ParseInt(parts[0], 10, 8)
 	if err != nil {
-		err = errors.Wrapf(err, "unable to parse major version %s", parts[0])
-		return
+		return nil, errors.Wrapf(err, "unable to parse major version %s", parts[0])
 	}
-	minorVer, err := strconv.ParseInt(parts[1], 10, 8)
+	minor, err := strconv.ParseInt(parts[1], 10, 8)
 	if err != nil {
-		err = errors.Wrapf(err, "unable to parse minor version %s", parts[1])
-		return
+		return nil, errors.Wrapf(err, "unable to parse minor version %s", parts[1])
 	}
-	return int(majorVer), int(minorVer), nil
+	return &JavaVersion{int(major), int(minor), allowHigher}, nil
+}
+
+func CurrentJavaVersionMatches(version *JavaVersion) bool {
+	if currentJavaVersion == nil {
+		return false
+	}
+	if currentJavaVersion.Major < version.Major {
+		return false
+	}
+	if currentJavaVersion.Major > version.Major && version.AllowHigher {
+		return true
+	}
+	if currentJavaVersion.Major == version.Major {
+		if currentJavaVersion.Minor < version.Minor {
+			return false
+		}
+		if currentJavaVersion.Minor == version.Minor || (currentJavaVersion.Minor > version.Minor && version.AllowHigher) {
+			return true
+		}
+	}
+	return false
 }
 
 func getJavaExecutableUsingJavaHome(showConsole bool) (string, error) {
@@ -178,10 +226,10 @@ func ShowConsole() {
 	}
 }
 
-
 func init() {
 	javaExecutable = getJavaExecutable()
 	jarSignerExecutable = getJARSignerExecutable()
 	disableVerification = getDisableVerificationSetting()
 	addAppToControlPanel = getAddAppToControlPanelSetting()
+	currentJavaVersion, _ = GetJavaVersion()
 }
