@@ -189,6 +189,9 @@ If none of the other options result in a Java version that it can use, Open Web 
 |**resources**| | | |
 | | |os|windows, darwin, linux|
 | | |arch|amd64, x86|
+| |j2se or java| | |
+| | |version| |
+| | |java-vm-args| |
 | |jar| | |
 | | |href| |
 | |nativelib| | |
