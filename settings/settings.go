@@ -232,5 +232,4 @@ func init() {
 	jarSignerExecutable = getJARSignerExecutable()
 	disableVerification = getDisableVerificationSetting()
 	addAppToControlPanel = getAddAppToControlPanelSetting()
-	currentJavaVersion, _ = GetJavaVersion()
 }
