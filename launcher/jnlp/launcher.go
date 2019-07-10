@@ -224,7 +224,8 @@ func (launcher *Launcher) getJVMArgs() []string {
 	var jvmArgs []string
 	relevantResources := launcher.getRelevantResources()
 	for _, resources := range relevantResources {
-		if resources.J2SE != nil && resources.J2SE.JavaVMArgs != "" {
+		j2se := resources.getJ2SE()
+		if j2se != nil && j2se.JavaVMArgs != "" {
 			args := strings.Split(resources.J2SE.JavaVMArgs, " ")
 			jvmArgs = append(jvmArgs, args...)
 		}

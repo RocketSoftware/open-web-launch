@@ -31,6 +31,7 @@ type Resources struct {
 	Properties []Property   `xml:"property,omitempty"`
 	Extensions []*Extension `xml:"extension,omitempty"`
 	J2SE       *J2SE        `xml:"j2se,omitempty"`
+	Java       *J2SE        `xml:"java,omitempty"`        // synonym for j2se
 	NativeLibs []*NativeLib `xml:"nativelib,omitempty"`
 }
 
@@ -232,4 +233,14 @@ func (jnlp *JNLP) Title() string {
 		return jnlp.Information.Title
 	}
 	return ""
+}
+
+func (resources *Resources) getJ2SE() *J2SE {
+	if resources.J2SE != nil {
+		return resources.J2SE
+	}
+	if resources.Java != nil {
+		return resources.Java
+	}
+	return nil
 }
