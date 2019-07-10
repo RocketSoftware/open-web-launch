@@ -830,7 +830,7 @@ func (launcher *Launcher) checkRequiredJavaVersion() error {
 				return errors.Wrapf(err, `unable to parse version="%s" in jnlp file`, j2se.Version)
 			}
 			if !settings.CurrentJavaVersionMatches(javaVersion) {
-				return errors.Errorf("JNLP file requires Java version %s", j2se.Version)
+				return errors.Errorf("This JNLP file requires Java version %s", j2se.Version)
 			}
 		}
 	}
