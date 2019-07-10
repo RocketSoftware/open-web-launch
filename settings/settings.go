@@ -136,6 +136,7 @@ func GetJavaVersion() (javaVersion *JavaVersion, err error) {
 	if err != nil {
 		return
 	}
+	currentJavaVersion = javaVersion
 	return
 }
 
