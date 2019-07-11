@@ -123,12 +123,12 @@ func GetJavaVersion() (javaVersion *JavaVersion, err error) {
 	}
 	firstQuoteIndex := strings.Index(versionOutput, `"`)
 	if firstQuoteIndex == -1 {
-		err = errors.Wrapf(err, "unable to locate Java version: double quote not found: %s", versionOutput)
+		err = errors.Wrapf(err, `unable to locate Java version: double quote not found: "%s"`, versionOutput)
 		return
 	}
 	secondQuoteIndex := strings.Index(versionOutput[firstQuoteIndex+1:], `"`)
 	if secondQuoteIndex == -1 {
-		err = errors.Wrapf(err, "unable to locate Java version: second double quote not found: %s", versionOutput)
+		err = errors.Wrapf(err, `unable to locate Java version: second double quote not found: "%s"`, versionOutput)
 		return
 	}
 	version := versionOutput[firstQuoteIndex+1 : secondQuoteIndex+firstQuoteIndex+1]
@@ -148,16 +148,18 @@ func ParseJavaVersion(version string) (*JavaVersion, error) {
 		allowHigher = true
 	}
 	parts := strings.Split(ver, ".")
-	if len(parts) < 2 {
-		return nil, errors.Errorf("unable to parse Java version '%s'", version)
+	if len(parts) == 0 {
+		return nil, errors.Errorf(`unable to parse Java version "%s"`, version)
 	}
-	major, err := strconv.ParseInt(parts[0], 10, 8)
-	if err != nil {
-		return nil, errors.Wrapf(err, "unable to parse major version %s", parts[0])
+	var major, minor int64
+	var err error
+	if major, err = strconv.ParseInt(parts[0], 10, 8); err != nil {
+		return nil, errors.Wrapf(err, `unable to parse major version "%s"`, parts[0])
 	}
-	minor, err := strconv.ParseInt(parts[1], 10, 8)
-	if err != nil {
-		return nil, errors.Wrapf(err, "unable to parse minor version %s", parts[1])
+	if len(parts) > 1 {
+		if minor, err = strconv.ParseInt(parts[1], 10, 8); err != nil {
+			return nil, errors.Wrapf(err, `unable to parse minor version "%s"`, parts[1])
+		}
 	}
 	return &JavaVersion{int(major), int(minor), allowHigher}, nil
 }
