@@ -145,11 +145,16 @@ func (launcher *Launcher) CheckPlatform() error {
 	if err := settings.EnsureJARSignerAvailability(); err != nil {
 		log.Printf("%s, JAR verification will be skipped\n", err)
 	}
-	javaVersion, err := settings.JavaVersion()
+	javaVersion, err := settings.GetJavaVersionString()
 	if err != nil {
 		return errors.Wrap(err, "unable to obtain java version")
 	}
 	log.Println(javaVersion)
+	version, err := settings.GetJavaVersion()
+	if err != nil {
+		return err
+	}
+	log.Printf("Detected Java version major=%d minor=%d", version.Major, version.Minor)
 	log.Printf("DisableVerification is %v", settings.IsVerificationDisabled())
 	return nil
 }
@@ -218,7 +223,8 @@ func (launcher *Launcher) getJVMArgs() []string {
 	var jvmArgs []string
 	relevantResources := launcher.getRelevantResources()
 	for _, resources := range relevantResources {
-		if resources.J2SE != nil && resources.J2SE.JavaVMArgs != "" {
+		j2se := resources.getJ2SE()
+		if j2se != nil && j2se.JavaVMArgs != "" {
 			args := strings.Split(resources.J2SE.JavaVMArgs, " ")
 			jvmArgs = append(jvmArgs, args...)
 		}
@@ -318,6 +324,9 @@ func (launcher *Launcher) run(filedata []byte) error {
 		return err
 	}
 	if err := launcher.estimateProgressMax(); err != nil {
+		return err
+	}
+	if err := launcher.checkRequiredJavaVersion(); err != nil {
 		return err
 	}
 	if err := launcher.downloadJARs(); err != nil {
@@ -806,6 +815,23 @@ func (launcher *Launcher) saveOriginalFile() error {
 	originalFilePath := launcher.getOriginalFilePath()
 	if err := ioutil.WriteFile(originalFilePath, launcher.filedata, 0644); err != nil {
 		return errors.Wrap(err, "unable to save original jnlp file")
+	}
+	return nil
+}
+
+func (launcher *Launcher) checkRequiredJavaVersion() error {
+	relevantResources := launcher.getRelevantResources()
+	for _, resources := range relevantResources {
+		j2se := resources.getJ2SE()
+		if j2se != nil {
+			javaVersion, err  := settings.ParseJavaVersion(j2se.Version)
+			if err != nil {
+				return errors.Wrapf(err, `unable to parse version="%s" in jnlp file`, j2se.Version)
+			}
+			if !settings.CurrentJavaVersionMatches(javaVersion) {
+				return errors.Errorf("This JNLP file requires Java version %s", j2se.Version)
+			}
+		}
 	}
 	return nil
 }

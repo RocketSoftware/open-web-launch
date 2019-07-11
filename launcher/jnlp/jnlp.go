@@ -31,6 +31,7 @@ type Resources struct {
 	Properties []Property   `xml:"property,omitempty"`
 	Extensions []*Extension `xml:"extension,omitempty"`
 	J2SE       *J2SE        `xml:"j2se,omitempty"`
+	Java       *J2SE        `xml:"java,omitempty"` // synonym for j2se
 	NativeLibs []*NativeLib `xml:"nativelib,omitempty"`
 }
 
@@ -86,7 +87,7 @@ type Information struct {
 	Desktop        *xml.Name       `xml:"desktop"`                   // Can be used to indicate the RIA's preference for putting a shortcut on the user's desktop
 	Menu           *Menu           `xml:"menu,omitempty"`            // Can be used to indicate the RIA's preference for putting a menu item in the user's start menus
 	OfflineAllowed *OfflineAllowed `xml:"offline-allowed,omitempty"` // Indicates that this application can operate when the client system is disconnected from the network.
-	Version 		string 			`xml:"version,omitempty"`        // Application version
+	Version        string          `xml:"version,omitempty"`         // Application version
 }
 
 // Homepage of the RIA
@@ -232,4 +233,14 @@ func (jnlp *JNLP) Title() string {
 		return jnlp.Information.Title
 	}
 	return ""
+}
+
+func (resources *Resources) getJ2SE() *J2SE {
+	if resources.J2SE != nil {
+		return resources.J2SE
+	}
+	if resources.Java != nil {
+		return resources.Java
+	}
+	return nil
 }
