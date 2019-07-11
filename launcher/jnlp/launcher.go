@@ -152,7 +152,6 @@ func (launcher *Launcher) CheckPlatform() error {
 	log.Println(javaVersion)
 	version, err := settings.GetJavaVersion()
 	if err != nil {
-		log.Println(err)
 		return err
 	}
 	log.Printf("Detected Java version major=%d minor=%d", version.Major, version.Minor)
