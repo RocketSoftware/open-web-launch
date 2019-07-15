@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"io"
-	"log"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -13,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/rocketsoftware/open-web-launch/utils"
+	"github.com/rocketsoftware/open-web-launch/utils/log"
 	"github.com/pkg/errors"
 )
 

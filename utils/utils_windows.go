@@ -2,7 +2,6 @@ package utils
 
 import (
 	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -13,9 +12,10 @@ import (
 
 	ole "github.com/go-ole/go-ole"
 	"github.com/go-ole/go-ole/oleutil"
-	"golang.org/x/sys/windows/registry"
 	"github.com/golang/freetype/truetype"
+	"github.com/rocketsoftware/open-web-launch/utils/log"
 	"golang.org/x/image/font"
+	"golang.org/x/sys/windows/registry"
 
 	"github.com/pkg/errors"
 )
@@ -370,4 +370,9 @@ func UninstallApp(title string) error {
 		return err
 	}
 	return nil
+}
+
+func OpenTextFile(filename string) error {
+	cmd := exec.Command("notepad.exe", filename)
+	return cmd.Start()
 }

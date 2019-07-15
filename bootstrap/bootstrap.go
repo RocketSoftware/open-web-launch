@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -15,6 +14,7 @@ import (
 	"github.com/rocketsoftware/open-web-launch/messaging"
 	"github.com/rocketsoftware/open-web-launch/settings"
 	"github.com/rocketsoftware/open-web-launch/utils"
+	"github.com/rocketsoftware/open-web-launch/utils/log"
 )
 
 var (
@@ -45,7 +45,6 @@ func Run(productName, productTitle, productVersion string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.SetFlags(log.LstdFlags | log.Lmicroseconds)
 	log.SetOutput(logFile)
 	log.Printf("starting %s %s with arguments %v\n", productTitle, productVersion, os.Args)
 	log.Printf("current platform is OS=%q Architecture=%q\n", runtime.GOOS, runtime.GOARCH)
@@ -59,10 +58,10 @@ func Run(productName, productTitle, productVersion string) {
 	flagCount := flag.NFlag()
 	if argCount == 1 && flagCount == 0 {
 		filenameOrURL := flag.Arg(0)
-		handleURLOrFilename(filenameOrURL, nil, productWorkDir, productTitle)
+		handleURLOrFilename(filenameOrURL, nil, productWorkDir, productTitle, productLogFile)
 	} else if argCount == 1 && uninstall {
 		filenameOrURL := flag.Arg(0)
-		handleUninstallCommand(filenameOrURL, showGUI, productWorkDir, productTitle)
+		handleUninstallCommand(filenameOrURL, showGUI, productWorkDir, productTitle, productLogFile)
 	} else if argCount == 1 {
 		filenameOrURL := flag.Arg(0)
 		options := &launcher.Options{}
@@ -77,16 +76,16 @@ func Run(productName, productTitle, productVersion string) {
 			settings.ShowConsole()
 			options.ShowConsole = true
 		}
-		handleURLOrFilename(filenameOrURL, options, productWorkDir, productTitle)
+		handleURLOrFilename(filenameOrURL, options, productWorkDir, productTitle, productLogFile)
 	} else {
 		isRunningFromBrowser := len(os.Args) > 2
 		options := &launcher.Options{IsRunningFromBrowser: isRunningFromBrowser}
-		log.Printf("running from browser: %v\n", isRunningFromBrowser)
-		listenForMessage(options, productWorkDir, productTitle)
+		log.Printf("running from browser: %v", isRunningFromBrowser)
+		listenForMessage(options, productWorkDir, productTitle, productLogFile)
 	}
 }
 
-func handleURLOrFilename(filenameOrURL string, options *launcher.Options, productWorkDir string, productTitle string) {
+func handleURLOrFilename(filenameOrURL string, options *launcher.Options, productWorkDir string, productTitle string, productLogFile string) {
 	myLauncher, byURL, err := launcher.FindLauncherForURLOrFilename(filenameOrURL)
 	if err != nil {
 		log.Fatal(err)
@@ -94,6 +93,7 @@ func handleURLOrFilename(filenameOrURL string, options *launcher.Options, produc
 	if err := myLauncher.CheckPlatform(); err != nil {
 		log.Fatal(err)
 	}
+	myLauncher.SetLogFile(productLogFile)
 	myLauncher.SetWorkDir(productWorkDir)
 	myLauncher.SetWindowTitle(productTitle)
 	myLauncher.SetOptions(options)
@@ -110,7 +110,7 @@ func handleURLOrFilename(filenameOrURL string, options *launcher.Options, produc
 	}
 }
 
-func listenForMessage(options *launcher.Options, productWorkDir string, productTitle string) {
+func listenForMessage(options *launcher.Options, productWorkDir string, productTitle string, productLogFile string) {
 	message, err := messaging.GetMessage(os.Stdin)
 	if err != nil {
 		if errors.Cause(err) != io.EOF {
@@ -133,6 +133,7 @@ func listenForMessage(options *launcher.Options, productWorkDir string, productT
 	if err := myLauncher.CheckPlatform(); err != nil {
 		log.Fatal(err)
 	}
+	myLauncher.SetLogFile(productLogFile)
 	myLauncher.SetWorkDir(productWorkDir)
 	myLauncher.SetWindowTitle(productTitle)
 	myLauncher.SetOptions(options)
@@ -152,11 +153,12 @@ func listenForMessage(options *launcher.Options, productWorkDir string, productT
 	}
 }
 
-func handleUninstallCommand(filenameOrURL string, showGUI bool, productWorkDir string, productTitle string) {
+func handleUninstallCommand(filenameOrURL string, showGUI bool, productWorkDir string, productTitle string, productLogFile string) {
 	myLauncher, byURL, err := launcher.FindLauncherForURLOrFilename(filenameOrURL)
 	if err != nil {
 		log.Fatal(err)
 	}
+	myLauncher.SetLogFile(productLogFile)
 	myLauncher.SetWorkDir(productWorkDir)
 	myLauncher.SetWindowTitle(productTitle)
 	if byURL {

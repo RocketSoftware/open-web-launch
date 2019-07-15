@@ -2,13 +2,13 @@ package jnlp
 
 import (
 	"io/ioutil"
-	"log"
 	"sync"
 
 	"github.com/pkg/errors"
 	"github.com/rocketsoftware/open-web-launch/gui"
 	launcher_utils "github.com/rocketsoftware/open-web-launch/launcher/utils"
 	"github.com/rocketsoftware/open-web-launch/utils/download"
+	"github.com/rocketsoftware/open-web-launch/utils/log"
 )
 
 func (launcher *Launcher) UninstallByFilename(filename string, showGUI bool) error {

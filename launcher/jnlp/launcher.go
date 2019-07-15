@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/url"
 	"os"
 	"os/exec"
@@ -21,6 +20,7 @@ import (
 	"github.com/rocketsoftware/open-web-launch/settings"
 	"github.com/rocketsoftware/open-web-launch/utils"
 	"github.com/rocketsoftware/open-web-launch/utils/download"
+	"github.com/rocketsoftware/open-web-launch/utils/log"
 	"github.com/rocketsoftware/open-web-launch/verifier"
 )
 
@@ -40,6 +40,7 @@ type Launcher struct {
 	gui               *gui.GUI
 	options           *launcher.Options
 	cert              []byte
+	logFile           string
 }
 
 // New creates a new JNLP Launcher
@@ -57,12 +58,17 @@ func (launcher *Launcher) SetWorkDir(dir string) {
 	launcher.WorkDir = dir
 }
 
+func (launcher *Launcher) SetLogFile(logFile string) {
+	launcher.logFile = logFile
+}
+
 // RunByURL runs a JNLP file by URL
 func (launcher *Launcher) RunByURL(url string) error {
 	var err error
 	log.Printf("Processing %s\n", url)
 	url = launcher.normalizeURL(url)
 	launcher.gui = gui.New()
+	launcher.gui.SetLogFile(launcher.logFile)
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
@@ -99,6 +105,7 @@ func (launcher *Launcher) RunByFilename(filename string) error {
 	var err error
 	log.Printf("Processing %s\n", filename)
 	launcher.gui = gui.New()
+	launcher.gui.SetLogFile(launcher.logFile)
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
@@ -783,12 +790,12 @@ func (launcher *Launcher) installApp() error {
 		url = info.Homepage.Href
 	}
 	app := &utils.AppInfo{
-		Title: info.Title,
+		Title:           info.Title,
 		UninstallString: uninstallString,
-		Icon: launcher.findShortcutIcon(),
-		Version: info.Version,
-		URL: url,
-		Publisher: info.Vendor,
+		Icon:            launcher.findShortcutIcon(),
+		Version:         info.Version,
+		URL:             url,
+		Publisher:       info.Vendor,
 	}
 	log.Printf("adding app into Control Panel")
 	if err := utils.InstallApp(app); err != nil {
@@ -824,13 +831,14 @@ func (launcher *Launcher) checkRequiredJavaVersion() error {
 	for _, resources := range relevantResources {
 		j2se := resources.getJ2SE()
 		if j2se != nil {
-			requiredVersion, err  := settings.ParseJavaVersion(j2se.Version)
+			requiredVersion, err := settings.ParseJavaVersion(j2se.Version)
 			if err != nil {
 				return errors.Wrapf(err, `unable to parse version="%s" in jnlp file`, j2se.Version)
 			}
 			if !settings.CurrentJavaVersionMatches(requiredVersion) {
 				currentVersion, _ := settings.GetJavaVersion()
-				return errors.Errorf("This JNLP file requires Java version %s, found %s", j2se.Version, currentVersion.String)
+				err = errors.Errorf("This JNLP file requires Java version %s", j2se.Version)
+				return utils.AddExtraLine(err, "Open Web Launch is using "+currentVersion.String)
 			}
 		}
 	}

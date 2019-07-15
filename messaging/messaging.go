@@ -5,9 +5,9 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"io"
-	"log"
 
 	"github.com/pkg/errors"
+	"github.com/rocketsoftware/open-web-launch/utils/log"
 )
 
 type Message struct {

@@ -2,7 +2,6 @@ package settings
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -12,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/rocketsoftware/open-web-launch/utils"
+	"github.com/rocketsoftware/open-web-launch/utils/log"
 
 	"github.com/pkg/errors"
 )
