@@ -837,8 +837,8 @@ func (launcher *Launcher) checkRequiredJavaVersion() error {
 			}
 			if !settings.CurrentJavaVersionMatches(requiredVersion) {
 				currentVersion, _ := settings.GetJavaVersion()
-				err = errors.Errorf("This JNLP file requires Java version %s", j2se.Version)
-				return utils.AddExtraLine(err, "Open Web Launch is using "+currentVersion.String)
+				err = errors.Errorf(`This JNLP file requires Java version "%s"`, j2se.Version)
+				return utils.AddExtraLine(err, `Open Web Launch is using Java version "`+currentVersion.String+`"`)
 			}
 		}
 	}
