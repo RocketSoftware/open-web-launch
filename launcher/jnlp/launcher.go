@@ -448,6 +448,7 @@ func (launcher *Launcher) downloadJARs() error {
 				return
 			}
 			if !settings.IsVerificationDisabled() {
+				launcher.gui.SendTextMessage(fmt.Sprintf("Checking JAR %s\n", path.Base(url)))
 				if err := verifier.VerifyWithJARSigner(filename, false); err != nil {
 					errChan <- errors.Wrapf(err, "JAR verification failed %s", filepath.Base(filename))
 					return
