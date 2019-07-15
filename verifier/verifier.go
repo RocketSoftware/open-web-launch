@@ -3,7 +3,6 @@ package verifier
 import (
 	"archive/zip"
 	"io/ioutil"
-	"log"
 	"os/exec"
 	"path"
 	"path/filepath"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/rocketsoftware/open-web-launch/settings"
 	"github.com/rocketsoftware/open-web-launch/utils"
+	"github.com/rocketsoftware/open-web-launch/utils/log"
 	"github.com/pkg/errors"
 )
 

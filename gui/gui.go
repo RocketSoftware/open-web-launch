@@ -6,7 +6,6 @@ import (
 	"bytes"
 	"image"
 	"image/color"
-	"log"
 	"regexp"
 	"sync"
 	"sync/atomic"
@@ -15,6 +14,7 @@ import (
 	"github.com/aarzilli/nucular/label"
 	"github.com/aarzilli/nucular/style"
 	"github.com/rocketsoftware/open-web-launch/utils"
+	"github.com/rocketsoftware/open-web-launch/utils/log"
 	"golang.org/x/mobile/event/key"
 )
 
@@ -31,6 +31,7 @@ type GUI struct {
 	readyOnce   sync.Once        // protects ready channel from being closed twice
 	icon        *image.RGBA
 	err         error
+	logFile     string
 }
 
 // myThemeTable is modified WhiteTheme
@@ -139,13 +140,32 @@ func (gui *GUI) updateFn(w *nucular.Window) {
 	w.Label(gui.title.Load().(string), "CC")
 
 	if gui.err != nil {
-		w.Row(85).Dynamic(1)
 		re := regexp.MustCompile("[^!-~\t ]")
 		text := re.ReplaceAllLiteralString(gui.err.Error(), "")
-		w.LabelWrap(text)
+		var extraLine string
+		if err, ok := gui.err.(*utils.ErrorWithExtraLine); ok {
+			extraLine = err.ExtraLine()
+		}
+		if extraLine != "" {
+			w.Row(20).Dynamic(1)
+			w.Label(text, "LT")
+			w.Row(65).Dynamic(1)
+			w.Label(extraLine, "LT")
+		} else {
+			w.Row(85).Dynamic(1)
+			w.LabelWrap(text)
+		}
+
 
 		w.Row(30).Dynamic(5)
-		w.Spacing(4)
+		if gui.logFile != "" {
+			w.Spacing(3)
+			if w.Button(label.TA("Open Log", "CC"), false) {
+				gui.openLog()
+			}
+		} else {
+			w.Spacing(4)
+		}
 		if w.Button(label.TA("Close", "CC"), false) {
 			log.Println("close button pressed, closing window...")
 			go gui.cancel(w)
@@ -263,4 +283,21 @@ func (gui *GUI) Closed() bool {
 		return false
 	}
 	return gui.window.Closed()
+}
+
+func (gui *GUI) openLog() {
+	if gui == nil {
+		return
+	}
+	if gui.logFile == "" {
+		return
+	}
+	utils.OpenTextFile(gui.logFile)
+}
+
+func (gui *GUI) SetLogFile(logFile string) {
+	if gui == nil {
+		return
+	}
+	gui.logFile = logFile
 }

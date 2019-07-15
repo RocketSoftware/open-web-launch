@@ -20,6 +20,7 @@ type Launcher interface {
 	CheckPlatform() error
 	UninstallByFilename(filename string, showGUI bool) error
 	UninstallByURL(url string, showGUI bool) error
+	SetLogFile(logFile string)
 }
 
 type Options struct {

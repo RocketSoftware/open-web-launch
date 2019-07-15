@@ -2,7 +2,6 @@ package settings
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -12,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/rocketsoftware/open-web-launch/utils"
+	"github.com/rocketsoftware/open-web-launch/utils/log"
 
 	"github.com/pkg/errors"
 )
@@ -22,12 +22,6 @@ var jarSignerExecutable string
 var disableVerification bool
 var addAppToControlPanel bool
 var currentJavaVersion *JavaVersion
-
-type Version struct {
-	Major       int
-	Minor       int
-	AllowHigher bool
-}
 
 func EnsureJavaExecutableAvailability() error {
 	if filepath.IsAbs(javaExecutable) {
@@ -105,9 +99,10 @@ type JavaVersion struct {
 	Major       int
 	Minor       int
 	AllowHigher bool
+	String    string
 }
 
-// GetJavaVersion returns major ans minor Java version
+// GetJavaVersion returns major and minor Java version
 func GetJavaVersion() (javaVersion *JavaVersion, err error) {
 	defer func() {
 		if err != nil {
@@ -161,7 +156,7 @@ func ParseJavaVersion(version string) (*JavaVersion, error) {
 			return nil, errors.Wrapf(err, `unable to parse minor version "%s"`, parts[1])
 		}
 	}
-	return &JavaVersion{int(major), int(minor), allowHigher}, nil
+	return &JavaVersion{int(major), int(minor), allowHigher, version}, nil
 }
 
 func CurrentJavaVersionMatches(version *JavaVersion) bool {

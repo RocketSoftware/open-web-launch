@@ -2,19 +2,20 @@ package jnlp
 
 import (
 	"io/ioutil"
-	"log"
 	"sync"
 
 	"github.com/pkg/errors"
 	"github.com/rocketsoftware/open-web-launch/gui"
 	launcher_utils "github.com/rocketsoftware/open-web-launch/launcher/utils"
 	"github.com/rocketsoftware/open-web-launch/utils/download"
+	"github.com/rocketsoftware/open-web-launch/utils/log"
 )
 
 func (launcher *Launcher) UninstallByFilename(filename string, showGUI bool) error {
 	log.Printf("uninstall using filename %s", filename)
 	if showGUI {
 		launcher.gui = gui.New()
+		launcher.gui.SetLogFile(launcher.logFile)
 	}
 	var wg sync.WaitGroup
 	var err error
@@ -26,9 +27,11 @@ func (launcher *Launcher) UninstallByFilename(filename string, showGUI bool) err
 		launcher.gui.WaitForWindow()
 		var filedata []byte
 		if filedata, err = ioutil.ReadFile(filename); err != nil {
+			launcher.gui.SendErrorMessage(err)
 			return
 		}
 		if err = launcher.uninstallUsingFileData(filedata); err != nil {
+			launcher.gui.SendErrorMessage(err)
 			return
 		}
 	}()
@@ -45,6 +48,7 @@ func (launcher *Launcher) UninstallByURL(url string, showGUI bool) error {
 	url = launcher.normalizeURL(url)
 	if showGUI {
 		launcher.gui = gui.New()
+		launcher.gui.SetLogFile(launcher.logFile)
 	}
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -55,9 +59,11 @@ func (launcher *Launcher) UninstallByURL(url string, showGUI bool) error {
 		launcher.gui.WaitForWindow()
 		var filedata []byte
 		if filedata, err = download.ToMemory(url); err != nil {
+			launcher.gui.SendErrorMessage(err)
 			return
 		}
 		if err = launcher.uninstallUsingFileData(filedata); err != nil {
+			launcher.gui.SendErrorMessage(err)
 			return
 		}
 	}()

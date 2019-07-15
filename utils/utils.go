@@ -74,10 +74,25 @@ func OpenOrCreateProductLogFile(productLogFile string) (*os.File, error) {
 }
 
 type AppInfo struct {
-	Title string
+	Title           string
 	UninstallString string
-	Icon string
-	Version string
-	URL string
-	Publisher string
+	Icon            string
+	Version         string
+	URL             string
+	Publisher       string
+}
+
+type ErrorWithExtraLine struct {
+	err       error
+	extraLine string
+}
+
+func (w *ErrorWithExtraLine) Error() string     { return w.err.Error() }
+func (w *ErrorWithExtraLine) ExtraLine() string { return w.extraLine }
+
+func AddExtraLine(err error, extraLine string) error {
+	return &ErrorWithExtraLine{
+		err:       err,
+		extraLine: extraLine,
+	}
 }

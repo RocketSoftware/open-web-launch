@@ -67,3 +67,8 @@ func InstallApp(app *AppInfo) error {
 func UninstallApp(title string) error {
 	return nil
 }
+
+func OpenTextFile(filename string) error {
+	cmd := exec.Command("Open", "-t", filename)
+	return cmd.Start()
+}

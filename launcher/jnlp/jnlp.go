@@ -4,10 +4,10 @@ package jnlp
 import (
 	"encoding/xml"
 	"io/ioutil"
-	"log"
 	"net/url"
 
 	launcher_utils "github.com/rocketsoftware/open-web-launch/launcher/utils"
+	"github.com/rocketsoftware/open-web-launch/utils/log"
 )
 
 // JNLP is a main xml element for a jnlp file
@@ -177,10 +177,10 @@ func (jnlp *JNLP) findRelevantResources() []*Resources {
 	var relevantResources []*Resources
 	for _, resources := range jnlp.Resources {
 		if resources.RelevantForCurrentPlatform() {
-			log.Printf("resources for os='%s' arch='%s' are relevant on current platform\n", resources.OS, resources.Arch)
+			log.Printf("resources for os='%s' arch='%s' are relevant on current platform", resources.OS, resources.Arch)
 			relevantResources = append(relevantResources, resources)
 		} else {
-			log.Printf("resources for os='%s' arch='%s' are not relevant on current platform\n", resources.OS, resources.Arch)
+			log.Printf("resources for os='%s' arch='%s' are not relevant on current platform", resources.OS, resources.Arch)
 		}
 	}
 	return relevantResources
