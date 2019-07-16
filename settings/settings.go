@@ -16,12 +16,15 @@ import (
 	"github.com/pkg/errors"
 )
 
-var javaExecutable string
-var javaSource string
-var jarSignerExecutable string
-var disableVerification bool
-var addAppToControlPanel bool
-var currentJavaVersion *JavaVersion
+var (
+	javaExecutable                string
+	javaSource                    string
+	jarSignerExecutable           string
+	disableVerification           bool
+	disableVerificationSameOrigin bool
+	addAppToControlPanel          bool
+	currentJavaVersion            *JavaVersion
+)
 
 func EnsureJavaExecutableAvailability() error {
 	if filepath.IsAbs(javaExecutable) {
@@ -77,6 +80,10 @@ func IsVerificationDisabled() bool {
 	return disableVerification
 }
 
+func IsVerificationSameOriginDisabled() bool {
+	return disableVerificationSameOrigin
+}
+
 func AddAppToControlPanel() bool {
 	return addAppToControlPanel
 }
@@ -99,7 +106,7 @@ type JavaVersion struct {
 	Major       int
 	Minor       int
 	AllowHigher bool
-	String    string
+	String      string
 }
 
 // GetJavaVersion returns major and minor Java version
@@ -228,5 +235,6 @@ func init() {
 	javaExecutable = getJavaExecutable()
 	jarSignerExecutable = getJARSignerExecutable()
 	disableVerification = getDisableVerificationSetting()
+	disableVerificationSameOrigin = getDisableVerificationSameOriginSetting()
 	addAppToControlPanel = getAddAppToControlPanelSetting()
 }
