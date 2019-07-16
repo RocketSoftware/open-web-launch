@@ -26,6 +26,10 @@ func getDisableVerificationSetting() bool {
 	return false
 }
 
+func getDisableVerificationSameOriginSetting() bool {
+	return false
+}
+
 func getAddAppToControlPanelSetting() bool {
 	return false
 }

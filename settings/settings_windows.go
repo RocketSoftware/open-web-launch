@@ -59,6 +59,10 @@ func getDisableVerificationSettingFromRootKey(rootKey registry.Key) (uint64, err
 	return getUInt64ValueFromRootKey(rootKey, "DisableVerification")
 }
 
+func getDisableVerificationSameOriginSettingFromRootKey(rootKey registry.Key) (uint64, error) {
+	return getUInt64ValueFromRootKey(rootKey, "DisableVerificationSameOrigin")
+}
+
 func getJavaDetectionStrategy() string {
 	strategy, err := getJavaDetectionStrategyFromRootKey(registry.CURRENT_USER)
 	if err != nil {
@@ -74,6 +78,17 @@ func getDisableVerificationSetting() bool {
 	disableVerification, err := getDisableVerificationSettingFromRootKey(registry.CURRENT_USER)
 	if err != nil {
 		disableVerification, err = getDisableVerificationSettingFromRootKey(registry.LOCAL_MACHINE)
+	}
+	if err != nil {
+		return false
+	}
+	return disableVerification == 1
+}
+
+func getDisableVerificationSameOriginSetting() bool {
+	disableVerification, err := getDisableVerificationSameOriginSettingFromRootKey(registry.CURRENT_USER)
+	if err != nil {
+		disableVerification, err = getDisableVerificationSameOriginSettingFromRootKey(registry.LOCAL_MACHINE)
 	}
 	if err != nil {
 		return false

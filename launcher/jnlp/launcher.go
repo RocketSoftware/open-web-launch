@@ -163,6 +163,7 @@ func (launcher *Launcher) CheckPlatform() error {
 	}
 	log.Printf("Detected Java version major=%d minor=%d", version.Major, version.Minor)
 	log.Printf("DisableVerification is %v", settings.IsVerificationDisabled())
+	log.Printf("DisableVerificationSameOrigin is %v", settings.IsVerificationSameOriginDisabled())
 	return nil
 }
 
@@ -459,12 +460,14 @@ func (launcher *Launcher) downloadJARs() error {
 			if launcher.gui.Closed() {
 				return
 			}
-			cert, err := verifier.GetJARCertificate(filename)
-			if err != nil {
-				errChan <- errors.Wrapf(err, "JAR certificate error %s", filepath.Base(filename))
-				return
+			if !settings.IsVerificationDisabled() && !settings.IsVerificationSameOriginDisabled() {
+				cert, err := verifier.GetJARCertificate(filename)
+				if err != nil {
+					errChan <- errors.Wrapf(err, "JAR certificate error %s", filepath.Base(filename))
+					return
+				}
+				certChan <- cert
 			}
-			certChan <- cert
 			launcher.gui.ProgressStep()
 		}(url)
 	}
@@ -478,13 +481,15 @@ func (launcher *Launcher) downloadJARs() error {
 	if err, ok := <-errChan; ok {
 		return err
 	}
-	firstCert := <-certChan
-	for cert := range certChan {
-		if bytes.Equal(firstCert, cert) {
-			return errors.New("all JARs have to be signed with the same certificate")
+	if !settings.IsVerificationDisabled() && !settings.IsVerificationSameOriginDisabled() {
+		firstCert := <-certChan
+		for cert := range certChan {
+			if bytes.Equal(firstCert, cert) {
+				return errors.New("all JARs have to be signed with the same certificate")
+			}
 		}
+		launcher.cert = firstCert
 	}
-	launcher.cert = firstCert
 	if launcher.gui.Closed() {
 		return errCancelled
 	}
@@ -548,15 +553,17 @@ func (launcher *Launcher) downloadExtensions() error {
 						errChan <- errors.Wrapf(err, "JAR verification failed %s", filepath.Base(filename))
 						return
 					}
-				}
-				cert, err := verifier.GetJARCertificate(filename)
-				if err != nil {
-					errChan <- errors.Wrapf(err, "JAR certificate error %s", filepath.Base(filename))
-					return
-				}
-				if bytes.Equal(launcher.cert, cert) {
-					errChan <- errors.New("all JARs have to be signed with the same certificate")
-					return
+					if !settings.IsVerificationSameOriginDisabled() {
+					    cert, err := verifier.GetJARCertificate(filename)
+					    if err != nil {
+					    	errChan <- errors.Wrapf(err, "JAR certificate error %s", filepath.Base(filename))
+					    	return
+					    }
+					    if bytes.Equal(launcher.cert, cert) {
+					    	errChan <- errors.New("all JARs have to be signed with the same certificate")
+					    	return
+					    }
+					}
 				}
 				launcher.gui.SendTextMessage(fmt.Sprintf("Checking JAR %s finished\n", path.Base(jarURL)))
 				if launcher.gui.Closed() {
