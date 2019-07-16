@@ -211,6 +211,5 @@ func buildUsageText(productTitle, productVersion string) string {
 
 func showUsage(productTitle, productVersion string) {
 	text := buildUsageText(productTitle, productVersion)
-	fmt.Printf(text)
 	utils.ShowUsage(productTitle, productVersion, text)
 }
