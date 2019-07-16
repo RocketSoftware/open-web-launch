@@ -28,7 +28,10 @@ var helpOptions = []string{"-help", "--help", "/help", "-?", "/?"}
 
 func Run(productName, productTitle, productVersion string) {
 	usage := func() { showUsage(productTitle, productVersion); os.Exit(2) }
-	if len(os.Args) > 0 {
+	if len(os.Args) == 1 {
+		usage()
+	}
+	if len(os.Args) > 1 {
 		for _, helpOption := range helpOptions {
 			if helpOption == os.Args[1] {
 				usage()
