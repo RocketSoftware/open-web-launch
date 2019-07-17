@@ -24,9 +24,11 @@ type Launcher interface {
 }
 
 type Options struct {
-	IsRunningFromBrowser bool
-	JavaDir              string
-	ShowConsole          bool
+	IsRunningFromBrowser          bool
+	JavaDir                       string
+	ShowConsole                   bool
+	DisableVerification           bool
+	DisableVerificationSameOrigin bool
 }
 
 func RegisterProtocol(scheme string, launcher Launcher) {

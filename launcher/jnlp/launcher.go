@@ -554,15 +554,15 @@ func (launcher *Launcher) downloadExtensions() error {
 						return
 					}
 					if !settings.IsVerificationSameOriginDisabled() {
-					    cert, err := verifier.GetJARCertificate(filename)
-					    if err != nil {
-					    	errChan <- errors.Wrapf(err, "JAR certificate error %s", filepath.Base(filename))
-					    	return
-					    }
-					    if bytes.Equal(launcher.cert, cert) {
-					    	errChan <- errors.New("all JARs have to be signed with the same certificate")
-					    	return
-					    }
+						cert, err := verifier.GetJARCertificate(filename)
+						if err != nil {
+							errChan <- errors.Wrapf(err, "JAR certificate error %s", filepath.Base(filename))
+							return
+						}
+						if bytes.Equal(launcher.cert, cert) {
+							errChan <- errors.New("all JARs have to be signed with the same certificate")
+							return
+						}
 					}
 				}
 				launcher.gui.SendTextMessage(fmt.Sprintf("Checking JAR %s finished\n", path.Base(jarURL)))
@@ -725,6 +725,12 @@ func (launcher *Launcher) getShortcutArguments() []string {
 	}
 	if launcher.options != nil && launcher.options.ShowConsole {
 		arguments = append(arguments, "-showconsole")
+	}
+	if launcher.options != nil && launcher.options.DisableVerification {
+		arguments = append(arguments, "-disableverification")
+	}
+	if launcher.options != nil && launcher.options.DisableVerificationSameOrigin {
+		arguments = append(arguments, "-disableverificationsameorigin")
 	}
 	arguments = append(arguments, launcher.getOriginalFilePath())
 	return arguments

@@ -231,6 +231,14 @@ func ShowConsole() {
 	}
 }
 
+func DisableVerification() {
+	disableVerification = true
+}
+
+func DisableVerificationSameOrigin() {
+	disableVerificationSameOrigin = true
+}
+
 func init() {
 	javaExecutable = getJavaExecutable()
 	jarSignerExecutable = getJARSignerExecutable()
