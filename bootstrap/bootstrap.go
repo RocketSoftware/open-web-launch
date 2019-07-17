@@ -54,9 +54,13 @@ func Run(productName, productTitle, productVersion string) {
 	log.Printf("starting %s %s with arguments %v\n", productTitle, productVersion, os.Args)
 	log.Printf("current platform is OS=%q Architecture=%q\n", runtime.GOOS, runtime.GOARCH)
 	flag.BoolVar(&showConsole, "showconsole", false, "show Java console")
+	flag.BoolVar(&showConsole, "showConsole", false, "show Java console")
 	flag.StringVar(&javaDir, "javadir", "", "Java folder that should be used for starting a Java Web Start application")
+	flag.StringVar(&javaDir, "javaDir", "", "Java folder that should be used for starting a Java Web Start application")
 	flag.BoolVar(&disableVerification, "disableverification", false, "don't verify jar signatures")
+	flag.BoolVar(&disableVerification, "disableVerification", false, "don't verify jar signatures")
 	flag.BoolVar(&disableVerificationSameOrigin, "disableverificationsameorigin", false, "don't verify all jars have same signature")
+	flag.BoolVar(&disableVerificationSameOrigin, "disableVerificationSameOrigin", false, "don't verify all jars have same signature")
 	flag.BoolVar(&uninstall, "uninstall", false, "uninstall a specific Java Web Start application")
 	flag.BoolVar(&showGUI, "gui", false, "show GUI")
 	flag.Usage = usage
@@ -72,22 +76,22 @@ func Run(productName, productTitle, productVersion string) {
 	} else if argCount == 1 {
 		filenameOrURL := flag.Arg(0)
 		options := &launcher.Options{}
-		if isFlagSet("javadir") {
+		if isFlagSet("javadir") || isFlagSet("javaDir") {
 			var err error
 			if javaDir, err = settings.UseJavaDir(javaDir); err != nil {
 				log.Fatal(err)
 			}
 			options.JavaDir = javaDir
 		}
-		if isFlagSet("showconsole") {
+		if isFlagSet("showconsole") || isFlagSet("showConsole") {
 			settings.ShowConsole()
 			options.ShowConsole = true
 		}
-		if isFlagSet("disableverification") {
+		if isFlagSet("disableverification") || isFlagSet("disableVerification") {
 			settings.DisableVerification()
 			options.DisableVerification = true
 		}
-		if isFlagSet("disableverificationsameorigin") {
+		if isFlagSet("disableverificationsameorigin") || isFlagSet("disableVerificationSameOrigin") {
 			settings.DisableVerificationSameOrigin()
 			options.DisableVerificationSameOrigin = true
 		}
@@ -208,13 +212,13 @@ func buildUsageText(productTitle, productVersion string) string {
 	text += fmt.Sprintf("%s [options] <filename | URL>\n", program)
 	text += fmt.Sprintf("\n")
 	text += fmt.Sprintf("Options:\n")
-	text += fmt.Sprintf("  -javadir <java folder>\n")
+	text += fmt.Sprintf("  -javaDir <java folder>\n")
 	text += fmt.Sprintf("      use Java from <java folder>\n")
-	text += fmt.Sprintf("  -showconsole\n")
+	text += fmt.Sprintf("  -showConsole\n")
 	text += fmt.Sprintf("      show Java console\n")
-	text += fmt.Sprintf("  -disableverification\n")
+	text += fmt.Sprintf("  -disableVerification\n")
 	text += fmt.Sprintf("      don't verify jar signatures\n")
-	text += fmt.Sprintf("  -disableverificationsameorigin\n")
+	text += fmt.Sprintf("  -disableVerificationSameOrigin\n")
 	text += fmt.Sprintf("      don't verify all jars have same signature\n")
 	text += fmt.Sprintf("  -uninstall\n")
 	text += fmt.Sprintf("      uninstall app\n")

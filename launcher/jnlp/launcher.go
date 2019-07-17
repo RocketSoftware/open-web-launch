@@ -720,17 +720,17 @@ func (launcher *Launcher) getShortcutDescription() string {
 func (launcher *Launcher) getShortcutArguments() []string {
 	var arguments []string
 	if launcher.options != nil && launcher.options.JavaDir != "" {
-		arguments = append(arguments, "-javadir")
+		arguments = append(arguments, "-javaDir")
 		arguments = append(arguments, launcher.options.JavaDir)
 	}
 	if launcher.options != nil && launcher.options.ShowConsole {
-		arguments = append(arguments, "-showconsole")
+		arguments = append(arguments, "-showConsole")
 	}
 	if launcher.options != nil && launcher.options.DisableVerification {
-		arguments = append(arguments, "-disableverification")
+		arguments = append(arguments, "-disableVerification")
 	}
 	if launcher.options != nil && launcher.options.DisableVerificationSameOrigin {
-		arguments = append(arguments, "-disableverificationsameorigin")
+		arguments = append(arguments, "-disableVerificationSameOrigin")
 	}
 	arguments = append(arguments, launcher.getOriginalFilePath())
 	return arguments
