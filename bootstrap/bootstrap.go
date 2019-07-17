@@ -18,10 +18,12 @@ import (
 )
 
 var (
-	javaDir     string
-	showConsole bool
-	uninstall   bool
-	showGUI     bool
+	javaDir                       string
+	showConsole                   bool
+	disableVerification           bool
+	disableVerificationSameOrigin bool
+	uninstall                     bool
+	showGUI                       bool
 )
 
 var helpOptions = []string{"-help", "--help", "/help", "-?", "/?"}
@@ -53,6 +55,8 @@ func Run(productName, productTitle, productVersion string) {
 	log.Printf("current platform is OS=%q Architecture=%q\n", runtime.GOOS, runtime.GOARCH)
 	flag.BoolVar(&showConsole, "showconsole", false, "show Java console")
 	flag.StringVar(&javaDir, "javadir", "", "Java folder that should be used for starting a Java Web Start application")
+	flag.BoolVar(&disableVerification, "disableverification", false, "don't verify jar signatures")
+	flag.BoolVar(&disableVerificationSameOrigin, "disableverificationsameorigin", false, "don't verify all jars have same signature")
 	flag.BoolVar(&uninstall, "uninstall", false, "uninstall a specific Java Web Start application")
 	flag.BoolVar(&showGUI, "gui", false, "show GUI")
 	flag.Usage = usage
@@ -78,6 +82,14 @@ func Run(productName, productTitle, productVersion string) {
 		if isFlagSet("showconsole") {
 			settings.ShowConsole()
 			options.ShowConsole = true
+		}
+		if isFlagSet("disableverification") {
+			settings.DisableVerification()
+			options.DisableVerification = true
+		}
+		if isFlagSet("disableverificationsameorigin") {
+			settings.DisableVerificationSameOrigin()
+			options.DisableVerificationSameOrigin = true
 		}
 		handleURLOrFilename(filenameOrURL, options, productWorkDir, productTitle, productLogFile)
 	} else {
@@ -200,6 +212,10 @@ func buildUsageText(productTitle, productVersion string) string {
 	text += fmt.Sprintf("      use Java from <java folder>\n")
 	text += fmt.Sprintf("  -showconsole\n")
 	text += fmt.Sprintf("      show Java console\n")
+	text += fmt.Sprintf("  -disableverification\n")
+	text += fmt.Sprintf("      don't verify jar signatures\n")
+	text += fmt.Sprintf("  -disableverificationsameorigin\n")
+	text += fmt.Sprintf("      don't verify all jars have same signature\n")
 	text += fmt.Sprintf("  -uninstall\n")
 	text += fmt.Sprintf("      uninstall app\n")
 	text += fmt.Sprintf("  -gui\n")
