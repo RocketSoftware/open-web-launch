@@ -283,7 +283,7 @@ func (launcher *Launcher) command() (*exec.Cmd, error) {
 		javaArgs = append(javaArgs, fmt.Sprintf("-D%s=%s", property.Name, property.Value))
 	}
 	if len(nativeLibPaths) > 0 {
-		javaArgs = append(javaArgs, fmt.Sprintf("-Dsettings.library.path=%s", strings.Join(nativeLibPaths, ClassPathSeparator)))
+		javaArgs = append(javaArgs, fmt.Sprintf("-Djava.library.path=%s", strings.Join(nativeLibPaths, ClassPathSeparator)))
 	}
 	if splash := launcher.getSplashScreen(); splash != "" {
 		javaArgs = append(javaArgs, fmt.Sprintf("-splash:%s", splash))
