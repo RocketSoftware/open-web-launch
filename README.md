@@ -106,7 +106,7 @@ This is the command line executed when double-clicking a JNLP file.
 
 `openweblaunch.exe <jnlp reference>`
 
-**-Uninstall**
+**-uninstall**
 
 This command allows to uninstall a specific Java Web Start application.
 
@@ -116,19 +116,35 @@ This command allows to uninstall a specific Java Web Start application.
 
 `openweblaunch.exe -uninstall -gui <jnlp reference>`
 
-**-JavaDir**
+**-javaDir**
 
 This command allows to pass a specific Java that should be used for starting a Java Web Start application.
 
-`openweblaunch.exe -javadir <java folder> <jnlp reference>`
+`openweblaunch.exe -javaDir <java folder> <jnlp reference>`
 
-**-ShowConsole**
+**-showConsole**
 
 This command allows show Java console when a Java Web Start application is running.
 
-`openweblaunch.exe -showconsole <jnlp reference>`
+`openweblaunch.exe -showConsole <jnlp reference>`
 
-**-Help**
+**-disableVerification**
+
+-  When `-disableVerification` is specified, Open Web Launch will skip signature verification in jar files.
+
+This command allows to skip signature verification in jar files.
+
+`openweblaunch.exe -disableVerification <jnlp reference>`
+
+**-disableVerificationSameOrigin**
+
+-  When `-disableVerificationSameOrigin` is specified, Open Web Launch will not verify that all jars have same signature.
+
+This command allows to skip verification that all jars have same signature..
+
+`openweblaunch.exe -disableVerificationSameOrigin <jnlp reference>`
+
+**-help**
 
 This command allows to show usage information.
 
@@ -157,8 +173,7 @@ This is the order by which Open Web Launch determines what Java executable it wi
 
 **Command line options**
 
--  When `-javadir <java folder>` is specified, Java installation from `<java folder>` will be used.
--  When `-showconsole` is specified, Java console will be shown when app is running.
+-  When `-javaDir <java folder>` is specified, Java installation from `<java folder>` will be used.
 
 **JAVA_HOME**
 
