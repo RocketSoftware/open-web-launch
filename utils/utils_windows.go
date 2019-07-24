@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -333,7 +332,6 @@ func ShowUsage(productTitle, productVersion, text string) {
 }
 
 func ShowFatalError(text string) {
-	fmt.Fprintf(os.Stderr, "about to call message box w")
 	caption := "Error"
 	pMessageBoxW.Call(
 		uintptr(0),
