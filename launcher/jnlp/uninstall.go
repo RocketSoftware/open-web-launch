@@ -18,10 +18,13 @@ func (launcher *Launcher) UninstallByFilename(filename string, showGUI bool) err
 		launcher.gui.SetLogFile(launcher.logFile)
 	}
 	var wg sync.WaitGroup
-	var err error
 	wg.Add(1)
 	go func() {
+		var err error
 		defer func() {
+			if err != nil {
+				log.Println(err)
+			}
 			wg.Done()
 		}()
 		launcher.gui.WaitForWindow()
@@ -35,7 +38,7 @@ func (launcher *Launcher) UninstallByFilename(filename string, showGUI bool) err
 			return
 		}
 	}()
-	if err = launcher.gui.Start(launcher.WindowTitle); err != nil {
+	if err := launcher.gui.Start(launcher.WindowTitle); err != nil {
 		return err
 	}
 	wg.Wait()
@@ -44,7 +47,6 @@ func (launcher *Launcher) UninstallByFilename(filename string, showGUI bool) err
 
 func (launcher *Launcher) UninstallByURL(url string, showGUI bool) error {
 	log.Printf("uninstall using URL %s", url)
-	var err error
 	url = launcher.normalizeURL(url)
 	if showGUI {
 		launcher.gui = gui.New()
@@ -53,7 +55,11 @@ func (launcher *Launcher) UninstallByURL(url string, showGUI bool) error {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
+		var err error
 		defer func() {
+			if err != nil {
+				log.Println(err)
+			}
 			wg.Done()
 		}()
 		launcher.gui.WaitForWindow()
@@ -67,7 +73,7 @@ func (launcher *Launcher) UninstallByURL(url string, showGUI bool) error {
 			return
 		}
 	}()
-	if err = launcher.gui.Start(launcher.WindowTitle); err != nil {
+	if err := launcher.gui.Start(launcher.WindowTitle); err != nil {
 		return err
 	}
 	wg.Wait()

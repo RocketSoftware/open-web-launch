@@ -60,6 +60,10 @@ func ShowUsage(productTitle, productVersion, text string) {
 	fmt.Fprintf(os.Stderr, text)
 }
 
+func ShowFatalError(text string) {
+	fmt.Fprintf(os.Stderr, text)
+}
+
 func InstallApp(app *AppInfo) error {
 	return nil
 }

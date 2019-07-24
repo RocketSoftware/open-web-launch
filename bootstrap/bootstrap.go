@@ -118,12 +118,12 @@ func handleURLOrFilename(filenameOrURL string, options *launcher.Options, produc
 	myLauncher.SetOptions(options)
 	if byURL {
 		if err := myLauncher.RunByURL(filenameOrURL); err != nil {
-			log.Println(err)
+			log.Fatal(err)
 			return
 		}
 	} else {
 		if err := myLauncher.RunByFilename(filenameOrURL); err != nil {
-			log.Println(err)
+			log.Fatal(err)
 			return
 		}
 	}
@@ -182,12 +182,12 @@ func handleUninstallCommand(filenameOrURL string, showGUI bool, productWorkDir s
 	myLauncher.SetWindowTitle(productTitle)
 	if byURL {
 		if err := myLauncher.UninstallByURL(filenameOrURL, showGUI); err != nil {
-			log.Println(err)
+			log.Fatal(err)
 			return
 		}
 	} else {
 		if err := myLauncher.UninstallByFilename(filenameOrURL, showGUI); err != nil {
-			log.Println(err)
+			log.Fatal(err)
 			return
 		}
 	}
