@@ -109,9 +109,6 @@ func handleURLOrFilename(filenameOrURL string, options *launcher.Options, produc
 	if err != nil {
 		log.Fatal(err)
 	}
-	if err := myLauncher.CheckPlatform(); err != nil {
-		log.Fatal(err)
-	}
 	myLauncher.SetLogFile(productLogFile)
 	myLauncher.SetWorkDir(productWorkDir)
 	myLauncher.SetWindowTitle(productTitle)
@@ -147,9 +144,6 @@ func listenForMessage(options *launcher.Options, productWorkDir string, productT
 	}
 	myLauncher, err := launcher.FindLauncherForURL(message.URL)
 	if err != nil {
-		log.Fatal(err)
-	}
-	if err := myLauncher.CheckPlatform(); err != nil {
 		log.Fatal(err)
 	}
 	myLauncher.SetLogFile(productLogFile)

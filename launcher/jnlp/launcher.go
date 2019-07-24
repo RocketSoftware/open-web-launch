@@ -81,6 +81,10 @@ func (launcher *Launcher) RunByURL(url string) error {
 			wg.Done()
 		}()
 		launcher.gui.WaitForWindow()
+		if err = launcher.CheckPlatform(); err != nil {
+			launcher.gui.SendErrorMessage(err)
+			return
+		}
 		var filedata []byte
 		if filedata, err = download.ToMemory(url); err != nil {
 			launcher.gui.SendErrorMessage(err)
@@ -120,6 +124,10 @@ func (launcher *Launcher) RunByFilename(filename string) error {
 			wg.Done()
 		}()
 		launcher.gui.WaitForWindow()
+		if err = launcher.CheckPlatform(); err != nil {
+			launcher.gui.SendErrorMessage(err)
+			return
+		}
 		var filedata []byte
 		if filedata, err = ioutil.ReadFile(filename); err != nil {
 			launcher.gui.SendErrorMessage(err)
