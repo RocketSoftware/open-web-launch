@@ -13,7 +13,6 @@ import (
 	ole "github.com/go-ole/go-ole"
 	"github.com/go-ole/go-ole/oleutil"
 	"github.com/golang/freetype/truetype"
-	"github.com/rocketsoftware/open-web-launch/utils/log"
 	"golang.org/x/image/font"
 	"golang.org/x/sys/windows/registry"
 
@@ -179,7 +178,6 @@ func CallLibrary(path string, funcName string, arg string) (err error) {
 	copy(byteArg, []byte(arg))
 	var nargs uintptr = 1
 	syscall.Syscall(uintptr(proc), nargs, uintptr(unsafe.Pointer(&byteArg[0])), 0, 0)
-	log.Printf("library called successfully")
 	return nil
 }
 
@@ -319,6 +317,7 @@ var (
 )
 
 const (
+	cMB_ICONINERROR     = 0x00000010
 	cMB_ICONINFORMATION = 0x00000040
 )
 
@@ -329,6 +328,16 @@ func ShowUsage(productTitle, productVersion, text string) {
 		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(text))),
 		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(caption))),
 		uintptr(cMB_ICONINFORMATION),
+	)
+}
+
+func ShowFatalError(text string) {
+	caption := "Error"
+	pMessageBoxW.Call(
+		uintptr(0),
+		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(text))),
+		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(caption))),
+		uintptr(cMB_ICONINERROR),
 	)
 }
 

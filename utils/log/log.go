@@ -3,17 +3,23 @@ package log
 import (
 	"io"
 	logger "log"
+	"os"
 	"runtime"
 	"strings"
+	"github.com/rocketsoftware/open-web-launch/utils"
 )
 
 var newline string
 
-func Fatal(v ...interface{}) {
-	logger.Fatal(v, newline)
+func Fatal(err error) {
+	Println(err)
+	utils.ShowFatalError(err.Error())
+	os.Exit(2)
 }
+
 func Println(v ...interface{}) {
-	logger.Println(v, newline)
+	args := append(v, newline)
+	logger.Println(args...)
 }
 
 func Printf(format string, v ...interface{}) {
@@ -30,6 +36,6 @@ func SetOutput(w io.Writer) {
 func init() {
 	if runtime.GOOS == "windows" {
 		newline = "\r"
-    }
-    logger.SetFlags(logger.LstdFlags | logger.Lmicroseconds)
+	}
+	logger.SetFlags(logger.LstdFlags | logger.Lmicroseconds)
 }

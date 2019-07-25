@@ -109,21 +109,18 @@ func handleURLOrFilename(filenameOrURL string, options *launcher.Options, produc
 	if err != nil {
 		log.Fatal(err)
 	}
-	if err := myLauncher.CheckPlatform(); err != nil {
-		log.Fatal(err)
-	}
 	myLauncher.SetLogFile(productLogFile)
 	myLauncher.SetWorkDir(productWorkDir)
 	myLauncher.SetWindowTitle(productTitle)
 	myLauncher.SetOptions(options)
 	if byURL {
 		if err := myLauncher.RunByURL(filenameOrURL); err != nil {
-			log.Println(err)
+			log.Fatal(err)
 			return
 		}
 	} else {
 		if err := myLauncher.RunByFilename(filenameOrURL); err != nil {
-			log.Println(err)
+			log.Fatal(err)
 			return
 		}
 	}
@@ -147,9 +144,6 @@ func listenForMessage(options *launcher.Options, productWorkDir string, productT
 	}
 	myLauncher, err := launcher.FindLauncherForURL(message.URL)
 	if err != nil {
-		log.Fatal(err)
-	}
-	if err := myLauncher.CheckPlatform(); err != nil {
 		log.Fatal(err)
 	}
 	myLauncher.SetLogFile(productLogFile)
@@ -182,12 +176,12 @@ func handleUninstallCommand(filenameOrURL string, showGUI bool, productWorkDir s
 	myLauncher.SetWindowTitle(productTitle)
 	if byURL {
 		if err := myLauncher.UninstallByURL(filenameOrURL, showGUI); err != nil {
-			log.Println(err)
+			log.Fatal(err)
 			return
 		}
 	} else {
 		if err := myLauncher.UninstallByFilename(filenameOrURL, showGUI); err != nil {
-			log.Println(err)
+			log.Fatal(err)
 			return
 		}
 	}
