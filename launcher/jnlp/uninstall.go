@@ -12,42 +12,15 @@ import (
 )
 
 func (launcher *Launcher) UninstallByFilename(filename string, showGUI bool) error {
-	log.Printf("uninstall using filename %s", filename)
-	if showGUI {
-		launcher.gui = gui.New()
-		launcher.gui.SetLogFile(launcher.logFile)
-	}
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		var err error
-		defer func() {
-			if err != nil {
-				log.Println(err)
-			}
-			wg.Done()
-		}()
-		launcher.gui.WaitForWindow()
-		var filedata []byte
-		if filedata, err = ioutil.ReadFile(filename); err != nil {
-			launcher.gui.SendErrorMessage(err)
-			return
-		}
-		if err = launcher.uninstallUsingFileData(filedata); err != nil {
-			launcher.gui.SendErrorMessage(err)
-			return
-		}
-	}()
-	if err := launcher.gui.Start(launcher.WindowTitle); err != nil {
-		return err
-	}
-	wg.Wait()
-	return nil
+	return launcher.uninstallByFilenameOrURL(filename, showGUI, false)
 }
 
 func (launcher *Launcher) UninstallByURL(url string, showGUI bool) error {
-	log.Printf("uninstall using URL %s", url)
-	url = launcher.normalizeURL(url)
+	return launcher.uninstallByFilenameOrURL(url, showGUI, true)
+}
+
+func (launcher *Launcher) uninstallByFilenameOrURL(filenameOrURL string, showGUI bool, isURL bool) error {
+	log.Printf("uninstall using %s", filenameOrURL)
 	if showGUI {
 		launcher.gui = gui.New()
 		launcher.gui.SetLogFile(launcher.logFile)
@@ -64,7 +37,13 @@ func (launcher *Launcher) UninstallByURL(url string, showGUI bool) error {
 		}()
 		launcher.gui.WaitForWindow()
 		var filedata []byte
-		if filedata, err = download.ToMemory(url); err != nil {
+		if isURL {
+			url := launcher.normalizeURL(filenameOrURL)
+			filedata, err = download.ToMemory(url)
+		} else {
+			filedata, err = ioutil.ReadFile(filenameOrURL)
+		}
+		if err != nil {
 			launcher.gui.SendErrorMessage(err)
 			return
 		}

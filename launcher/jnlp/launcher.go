@@ -64,42 +64,7 @@ func (launcher *Launcher) SetLogFile(logFile string) {
 
 // RunByURL runs a JNLP file by URL
 func (launcher *Launcher) RunByURL(url string) error {
-	log.Printf("Processing %s\n", url)
-	url = launcher.normalizeURL(url)
-	launcher.gui = gui.New()
-	launcher.gui.SetLogFile(launcher.logFile)
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		var err error
-		defer func() {
-			if err == nil {
-				launcher.gui.Terminate()
-			} else {
-				log.Println(err)
-			}
-			wg.Done()
-		}()
-		launcher.gui.WaitForWindow()
-		if err = launcher.CheckPlatform(); err != nil {
-			launcher.gui.SendErrorMessage(err)
-			return
-		}
-		var filedata []byte
-		if filedata, err = download.ToMemory(url); err != nil {
-			launcher.gui.SendErrorMessage(err)
-			return
-		}
-		if err = launcher.run(filedata); err != nil {
-			launcher.gui.SendErrorMessage(err)
-			return
-		}
-	}()
-	if err := launcher.gui.Start(launcher.WindowTitle); err != nil {
-		return err
-	}
-	wg.Wait()
-	return nil
+	return launcher.runByFilenameOrURL(url, true)
 }
 
 func (launcher *Launcher) SetOptions(options *launcher.Options) {
@@ -108,7 +73,11 @@ func (launcher *Launcher) SetOptions(options *launcher.Options) {
 
 // RunByFilename runs a JNLP file
 func (launcher *Launcher) RunByFilename(filename string) error {
-	log.Printf("Processing %s\n", filename)
+	return launcher.runByFilenameOrURL(filename, false)
+}
+
+func (launcher *Launcher) runByFilenameOrURL(filenameOrURL string, isURL bool) error {
+	log.Printf("Processing %s\n", filenameOrURL)
 	launcher.gui = gui.New()
 	launcher.gui.SetLogFile(launcher.logFile)
 	var wg sync.WaitGroup
@@ -129,7 +98,13 @@ func (launcher *Launcher) RunByFilename(filename string) error {
 			return
 		}
 		var filedata []byte
-		if filedata, err = ioutil.ReadFile(filename); err != nil {
+		if isURL {
+			url := launcher.normalizeURL(filenameOrURL)
+			filedata, err = download.ToMemory(url)
+		} else {
+			filedata, err = ioutil.ReadFile(filenameOrURL)
+		}
+		if err != nil {
 			launcher.gui.SendErrorMessage(err)
 			return
 		}
