@@ -85,16 +85,16 @@ func (launcher *Launcher) runByFilenameOrURL(filenameOrURL string, isURL bool) e
 	go func() {
 		var err error
 		defer func() {
-			if err == nil {
-				launcher.gui.Terminate()
-			} else {
+			if err != nil {
 				log.Println(err)
+				launcher.gui.SendErrorMessage(err)
+			} else {
+				launcher.gui.Terminate()
 			}
 			wg.Done()
 		}()
 		launcher.gui.WaitForWindow()
 		if err = launcher.CheckPlatform(); err != nil {
-			launcher.gui.SendErrorMessage(err)
 			return
 		}
 		var filedata []byte
@@ -105,16 +105,12 @@ func (launcher *Launcher) runByFilenameOrURL(filenameOrURL string, isURL bool) e
 			filedata, err = ioutil.ReadFile(filenameOrURL)
 		}
 		if err != nil {
-			launcher.gui.SendErrorMessage(err)
 			return
 		}
-		filedata, err = launcher.checkForUpdate(filedata)
-		if err != nil {
-			launcher.gui.SendErrorMessage(err)
+		if filedata, err = launcher.checkForUpdate(filedata); err != nil {
 			return
 		}
 		if err = launcher.run(filedata); err != nil {
-			launcher.gui.SendErrorMessage(err)
 			return
 		}
 	}()
