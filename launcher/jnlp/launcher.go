@@ -77,45 +77,18 @@ func (launcher *Launcher) RunByFilename(filename string) error {
 }
 
 func (launcher *Launcher) runByFilenameOrURL(filenameOrURL string, isURL bool) error {
-	log.Printf("Processing %s\n", filenameOrURL)
 	launcher.gui = gui.New()
 	launcher.gui.SetLogFile(launcher.logFile)
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
-		var err error
-		defer func() {
-			if err == nil {
-				launcher.gui.Terminate()
-			} else {
-				log.Println(err)
-			}
-			wg.Done()
-		}()
+		defer wg.Done()
 		launcher.gui.WaitForWindow()
-		if err = launcher.CheckPlatform(); err != nil {
+		if err := launcher.proccessFilenameOrURL(filenameOrURL, isURL); err != nil {
+			log.Println(err)
 			launcher.gui.SendErrorMessage(err)
-			return
-		}
-		var filedata []byte
-		if isURL {
-			url := launcher.normalizeURL(filenameOrURL)
-			filedata, err = download.ToMemory(url)
 		} else {
-			filedata, err = ioutil.ReadFile(filenameOrURL)
-		}
-		if err != nil {
-			launcher.gui.SendErrorMessage(err)
-			return
-		}
-		filedata, err = launcher.checkForUpdate(filedata)
-		if err != nil {
-			launcher.gui.SendErrorMessage(err)
-			return
-		}
-		if err = launcher.run(filedata); err != nil {
-			launcher.gui.SendErrorMessage(err)
-			return
+			launcher.gui.Terminate()
 		}
 	}()
 	if err := launcher.gui.Start(launcher.WindowTitle); err != nil {
@@ -123,6 +96,30 @@ func (launcher *Launcher) runByFilenameOrURL(filenameOrURL string, isURL bool) e
 	}
 	wg.Wait()
 	return nil
+}
+
+func (launcher *Launcher) proccessFilenameOrURL(filenameOrURL string, isURL bool) (err error) {
+	var filedata []byte
+	log.Printf("Processing %s\n", filenameOrURL)
+	if err = launcher.CheckPlatform(); err != nil {
+		return
+	}
+	if isURL {
+		url := launcher.normalizeURL(filenameOrURL)
+		filedata, err = download.ToMemory(url)
+	} else {
+		filedata, err = ioutil.ReadFile(filenameOrURL)
+	}
+	if err != nil {
+		return
+	}
+	if filedata, err = launcher.checkForUpdate(filedata); err != nil {
+		return
+	}
+	if err = launcher.run(filedata); err != nil {
+		return
+	}
+	return
 }
 
 // Terminate forces GUI to close
