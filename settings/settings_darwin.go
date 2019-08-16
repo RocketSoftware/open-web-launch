@@ -2,9 +2,11 @@ package settings
 
 import (
 	"bytes"
-	"howett.net/plist"
 	"io/ioutil"
 	"path/filepath"
+
+	"github.com/pkg/errors"
+	"howett.net/plist"
 )
 
 const (
@@ -12,16 +14,33 @@ const (
 )
 
 type Settings struct {
-	DisableVerification           bool `plist:"DisableVerification"`
-	DisableVerificationSameOrigin bool `plist:"DisableVerificationSameOrigin"`
+	DisableVerification           bool   `plist:"DisableVerification"`
+	DisableVerificationSameOrigin bool   `plist:"DisableVerificationSameOrigin"`
+	JavaDir                       string `plist:"JavaDir"`
 }
 
 func getJavaExecutable() string {
+	if java, err := getJavaExecutableUsingSettings(); err == nil {
+		return java
+	}
 	if java, err := getJavaExecutableUsingJavaHome(true); err == nil {
 		return java
 	}
 	javaSource = "PATH environment variable"
 	return "java"
+}
+
+func getJavaExecutableUsingSettings() (string, error) {
+	settings, err := decodeSettings()
+	if err != nil {
+		return "", err
+	}
+	javaDir := settings.JavaDir
+	if javaDir != "" {
+		javaSource = systemSettingsFile
+		return getJavaExecutableUsingJavaDir(javaDir), nil
+	}
+	return "", errors.Errorf("JavaDir not found in %s", systemSettingsFile)
 }
 
 func getJavaExecutableUsingJavaDir(dir string) string {
