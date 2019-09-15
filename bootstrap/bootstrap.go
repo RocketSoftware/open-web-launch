@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/rocketsoftware/open-web-launch/launcher"
@@ -73,7 +74,7 @@ func Run(productName, productTitle, productVersion string) {
 	} else if argCount == 1 && uninstall {
 		filenameOrURL := flag.Arg(0)
 		handleUninstallCommand(filenameOrURL, showGUI, productWorkDir, productTitle, productLogFile)
-	} else if argCount == 1 {
+	} else if argCount == 1 && !strings.HasPrefix(flag.Arg(0), "chrome-extension://") {
 		filenameOrURL := flag.Arg(0)
 		options := &launcher.Options{}
 		if isFlagSet("javadir") || isFlagSet("javaDir") {
@@ -97,7 +98,7 @@ func Run(productName, productTitle, productVersion string) {
 		}
 		handleURLOrFilename(filenameOrURL, options, productWorkDir, productTitle, productLogFile)
 	} else {
-		isRunningFromBrowser := len(os.Args) > 2
+		isRunningFromBrowser := true
 		options := &launcher.Options{IsRunningFromBrowser: isRunningFromBrowser}
 		log.Printf("running from browser: %v", isRunningFromBrowser)
 		listenForMessage(options, productWorkDir, productTitle, productLogFile)
