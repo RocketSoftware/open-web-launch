@@ -68,7 +68,7 @@ func Run(productName, productTitle, productVersion string) {
 	flag.Parse()
 	argCount := flag.NArg()
 	flagCount := flag.NFlag()
-	if argCount == 1 && flagCount == 0 {
+	if argCount == 1 && flagCount == 0 && !strings.HasPrefix(flag.Arg(0), "chrome-extension://") {
 		filenameOrURL := flag.Arg(0)
 		handleURLOrFilename(filenameOrURL, nil, productWorkDir, productTitle, productLogFile)
 	} else if argCount == 1 && uninstall {
