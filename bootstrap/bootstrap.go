@@ -42,6 +42,8 @@ func Run(productName, productTitle, productVersion string) {
 		}
 	}
 	userConfigDir, err := os.UserConfigDir()
+	userConfigDir := filepath.Join(userConfigDir, "Rocket Software")
+	
 	productWorkDir := filepath.Join(userConfigDir, productName)
 	productLogFile := filepath.Join(productWorkDir, productName+".log")
 	fmt.Fprintf(os.Stderr, "%s %s\n", productTitle, productVersion)
