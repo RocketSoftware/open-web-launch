@@ -41,10 +41,11 @@ func Run(productName, productTitle, productVersion string) {
 			}
 		}
 	}
-	productWorkDir := filepath.Join(os.UserConfigDir(), productName)
+	userConfigDir, err := os.UserConfigDir()
+	productWorkDir := filepath.Join(userConfigDir, productName)
 	productLogFile := filepath.Join(productWorkDir, productName+".log")
 	fmt.Fprintf(os.Stderr, "%s %s\n", productTitle, productVersion)
-	if err := utils.CreateDir(productWorkDir); err != nil {
+	if err := utils.CreateProductWorkDir(productWorkDir); err != nil {
 		log.Fatal(err)
 	}
 	logFile, err := utils.OpenOrCreateProductLogFile(productLogFile)
