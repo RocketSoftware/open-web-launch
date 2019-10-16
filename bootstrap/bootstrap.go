@@ -42,18 +42,28 @@ func Run(productName, productTitle, productVersion string) {
 		}
 	}
 	userConfigDir, err := os.UserConfigDir()
+
 	userConfigDir = filepath.Join(userConfigDir, "Rocket Software")
+	if err := utils.CreateProductWorkDir(userConfigDir); err != nil {
+		log.Fatal(err)
+	}
 	userConfigDir = filepath.Join(userConfigDir, productTitle)
+	if err := utils.CreateProductWorkDir(userConfigDir); err != nil {
+		log.Fatal(err)
+	}
 	
 	productWorkDir := filepath.Join(userConfigDir, "cache")
-
-	productLogFile := filepath.Join(userConfigDir, "log")
-	productLogFile = filepath.Join(productLogFile, productName+".log")
-
-	fmt.Fprintf(os.Stderr, "%s %s\n", productTitle, productVersion)
 	if err := utils.CreateProductWorkDir(productWorkDir); err != nil {
 		log.Fatal(err)
 	}
+
+	productLogFile := filepath.Join(userConfigDir, "log")
+	if err := utils.CreateProductWorkDir(productLogFile); err != nil {
+		log.Fatal(err)
+	}
+	productLogFile = filepath.Join(productLogFile, productName+".log")
+
+	fmt.Fprintf(os.Stderr, "%s %s\n", productTitle, productVersion)
 	logFile, err := utils.OpenOrCreateProductLogFile(productLogFile)
 	if err != nil {
 		log.Fatal(err)
