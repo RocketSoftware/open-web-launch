@@ -53,9 +53,12 @@ func ToFile(url string, dir string, allowCached bool) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer file.Close()
-	if err := download(url, file); err != nil {
-		return "", err
+	downloadErr := download(url, file)
+	file.Close()
+	if downloadErr != nil {
+		// remove empty file
+		os.Remove(filename)
+		return "", downloadErr
 	}
 	return filename, nil
 }
