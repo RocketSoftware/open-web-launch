@@ -782,7 +782,7 @@ func (launcher *Launcher) getOriginalFilePath() string {
 
 func (launcher *Launcher) installApp() error {
 	info := launcher.jnlp.Information
-	uninstallString := os.Args[0] + " -uninstall -gui " + launcher.getOriginalFilePath()
+	uninstallString := os.Args[0] + " -uninstall -gui \"" + launcher.getOriginalFilePath() + "\""
 	url := ""
 	if info.Homepage != nil {
 		url = info.Homepage.Href
