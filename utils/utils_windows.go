@@ -203,8 +203,7 @@ func CreateStartMenuShortcut(src, folder, title, description, iconSrc string, ar
 			err = errors.Wrapf(err, "unable to create a Start Menu shortcut for %v with title %s", arguments, title)
 		}
 	}()
-	homeDir := os.Getenv("USERPROFILE")
-	programsDir := filepath.Join(homeDir, "Start Menu", "Programs")
+	programsDir := getProgramsStartMenuDir()
 	dir := filepath.Join(programsDir, folder)
 	if _, err = os.Stat(dir); os.IsNotExist(err) {
 		err = os.MkdirAll(dir, 0755)
@@ -303,13 +302,17 @@ func RemoveStartMenuFolder(folder string) error {
 			err = errors.Wrapf(err, "unable to remove Start Menu folder %s", folder)
 		}
 	}()
-	homeDir := os.Getenv("USERPROFILE")
-	programsDir := filepath.Join(homeDir, "Start Menu", "Programs")
+	programsDir := getProgramsStartMenuDir()
 	dir := filepath.Join(programsDir, folder)
 	if _, err = os.Stat(dir); os.IsNotExist(err) {
 		return nil
 	}
 	return os.RemoveAll(dir)
+}
+
+func getProgramsStartMenuDir() string {
+	appDataDir := os.Getenv("APPDATA")
+	return filepath.Join(appDataDir, "Microsoft", "Windows", "Start Menu", "Programs")
 }
 
 var (
