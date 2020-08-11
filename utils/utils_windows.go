@@ -14,6 +14,7 @@ import (
 	"github.com/go-ole/go-ole/oleutil"
 	"github.com/golang/freetype/truetype"
 	"golang.org/x/image/font"
+	"golang.org/x/sys/windows"
 	"golang.org/x/sys/windows/registry"
 
 	"github.com/pkg/errors"
@@ -190,20 +191,26 @@ func CreateDesktopShortcut(src, title, description, iconSrc string, arguments ..
 			err = errors.Wrapf(err, "unable to create a desktop shortcut for %v with title %s", arguments, title)
 		}
 	}()
-	homeDir := os.Getenv("USERPROFILE")
-	desktopFolder := filepath.Join(homeDir, "Desktop")
+	desktopFolder, err := GetDesktopFolder()
+	if err != nil {
+		return err
+	}
 	err = CreateShortcut(src, desktopFolder, title, description, iconSrc, arguments...)
 	return nil
 }
 
 func CreateStartMenuShortcut(src, folder, title, description, iconSrc string, arguments ...string) error {
 	var err error
+	var programsDir string
 	defer func() {
 		if err != nil {
 			err = errors.Wrapf(err, "unable to create a Start Menu shortcut for %v with title %s", arguments, title)
 		}
 	}()
-	programsDir := getProgramsStartMenuDir()
+	programsDir, err = getProgramsStartMenuDir()
+	if err != nil {
+		return err
+	}
 	dir := filepath.Join(programsDir, folder)
 	if _, err = os.Stat(dir); os.IsNotExist(err) {
 		err = os.MkdirAll(dir, 0755)
@@ -281,13 +288,16 @@ func prepareShortcutArguments(arguments ...string) string {
 
 func RemoveDesktopShortcut(title string) error {
 	var err error
+	var desktopFolder string
 	defer func() {
 		if err != nil {
 			err = errors.Wrapf(err, "unable to remove desktop shortcut %s ", title)
 		}
 	}()
-	homeDir := os.Getenv("USERPROFILE")
-	desktopFolder := filepath.Join(homeDir, "Desktop")
+	desktopFolder, err = GetDesktopFolder()
+	if err != nil {
+		return err
+	}
 	link := filepath.Join(desktopFolder, title+".lnk")
 	if _, err = os.Stat(link); os.IsNotExist(err) {
 		return nil
@@ -297,12 +307,16 @@ func RemoveDesktopShortcut(title string) error {
 
 func RemoveStartMenuFolder(folder string) error {
 	var err error
+	var programsDir string
 	defer func() {
 		if err != nil {
 			err = errors.Wrapf(err, "unable to remove Start Menu folder %s", folder)
 		}
 	}()
-	programsDir := getProgramsStartMenuDir()
+	programsDir, err = getProgramsStartMenuDir()
+	if err != nil {
+		return err
+	}
 	dir := filepath.Join(programsDir, folder)
 	if _, err = os.Stat(dir); os.IsNotExist(err) {
 		return nil
@@ -310,9 +324,12 @@ func RemoveStartMenuFolder(folder string) error {
 	return os.RemoveAll(dir)
 }
 
-func getProgramsStartMenuDir() string {
-	appDataDir := os.Getenv("APPDATA")
-	return filepath.Join(appDataDir, "Microsoft", "Windows", "Start Menu", "Programs")
+func getProgramsStartMenuDir() (string, error) {
+	return windows.KnownFolderPath(windows.FOLDERID_Programs, 0)
+}
+
+func GetDesktopFolder() (string, error) {
+	return windows.KnownFolderPath(windows.FOLDERID_Desktop, 0)
 }
 
 var (
