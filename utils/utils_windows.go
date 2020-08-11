@@ -325,19 +325,11 @@ func RemoveStartMenuFolder(folder string) error {
 }
 
 func getProgramsStartMenuDir() (string, error) {
-	startMenuFolder, err := GetStartMenuFolder()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(startMenuFolder, "Programs"), nil
+	return windows.KnownFolderPath(windows.FOLDERID_Programs, 0)
 }
 
 func GetDesktopFolder() (string, error) {
 	return windows.KnownFolderPath(windows.FOLDERID_Desktop, 0)
-}
-
-func GetStartMenuFolder() (string, error) {
-	return windows.KnownFolderPath(windows.FOLDERID_StartMenu, 0)
 }
 
 var (
