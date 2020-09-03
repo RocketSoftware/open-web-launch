@@ -41,6 +41,8 @@ func Run(productName, productTitle, productVersion string) {
 			}
 		}
 	}
+	os.Setenv("HTTP_PROXY", "")
+	os.Setenv("HTTPS_PROXY", "")
 	userConfigDir, err := os.UserConfigDir()
 
 	userConfigDir = filepath.Join(userConfigDir, "Rocket Software")
@@ -51,7 +53,7 @@ func Run(productName, productTitle, productVersion string) {
 	if err := utils.CreateProductWorkDir(userConfigDir); err != nil {
 		log.Fatal(err)
 	}
-	
+
 	productWorkDir := filepath.Join(userConfigDir, "cache")
 	if err := utils.CreateProductWorkDir(productWorkDir); err != nil {
 		log.Fatal(err)
