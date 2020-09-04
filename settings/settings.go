@@ -17,13 +17,14 @@ import (
 )
 
 var (
-	javaExecutable                string
-	javaSource                    string
-	jarSignerExecutable           string
-	disableVerification           bool
-	disableVerificationSameOrigin bool
-	addAppToControlPanel          bool
-	currentJavaVersion            *JavaVersion
+	javaExecutable                  string
+	javaSource                      string
+	jarSignerExecutable             string
+	disableVerification             bool
+	disableVerificationSameOrigin   bool
+	addAppToControlPanel            bool
+	currentJavaVersion              *JavaVersion
+	useHttpProxyEnvironmentVariable bool
 )
 
 func EnsureJavaExecutableAvailability() error {
@@ -239,10 +240,15 @@ func DisableVerificationSameOrigin() {
 	disableVerificationSameOrigin = true
 }
 
+func UseHttpProxyEnvironmentVariable() bool {
+	return useHttpProxyEnvironmentVariable
+}
+
 func init() {
 	javaExecutable = getJavaExecutable()
 	jarSignerExecutable = getJARSignerExecutable()
 	disableVerification = getDisableVerificationSetting()
 	disableVerificationSameOrigin = getDisableVerificationSameOriginSetting()
 	addAppToControlPanel = getAddAppToControlPanelSetting()
+	useHttpProxyEnvironmentVariable = getUseHttpProxyEnvironmentVariableSetting()
 }
