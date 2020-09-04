@@ -55,6 +55,10 @@ func getAddAppToControlPanelSettingFromRootKey(rootKey registry.Key) (uint64, er
 	return getUInt64ValueFromRootKey(rootKey, "AddToControlPanel")
 }
 
+func getUseHttpProxyEnvironmentVariableSettingFromRootKey(rootKey registry.Key) (uint64, error) {
+	return getUInt64ValueFromRootKey(rootKey, "UseHttpProxyEnvironmentVariable")
+}
+
 func getDisableVerificationSettingFromRootKey(rootKey registry.Key) (uint64, error) {
 	return getUInt64ValueFromRootKey(rootKey, "DisableVerification")
 }
@@ -238,4 +242,15 @@ func getAddAppToControlPanelSetting() bool {
 		return false
 	}
 	return addAppToControlPanel == 1
+}
+
+func getUseHttpProxyEnvironmentVariableSetting() bool {
+	useHttpProxyEnvVar, err := getUseHttpProxyEnvironmentVariableSettingFromRootKey(registry.CURRENT_USER)
+	if err != nil {
+		useHttpProxyEnvVar, err = getUseHttpProxyEnvironmentVariableSettingFromRootKey(registry.LOCAL_MACHINE)
+	}
+	if err != nil {
+		return true
+	}
+	return useHttpProxyEnvVar == 1
 }

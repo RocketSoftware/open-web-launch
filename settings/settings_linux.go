@@ -33,3 +33,7 @@ func getDisableVerificationSameOriginSetting() bool {
 func getAddAppToControlPanelSetting() bool {
 	return false
 }
+
+func getUseHttpProxyEnvironmentVariableSetting() bool {
+	return true
+}

@@ -88,3 +88,7 @@ func decodeSettings() (*Settings, error) {
 	}
 	return &settings, nil
 }
+
+func getUseHttpProxyEnvironmentVariableSetting() bool {
+	return true
+}

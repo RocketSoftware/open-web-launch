@@ -51,7 +51,7 @@ func Run(productName, productTitle, productVersion string) {
 	if err := utils.CreateProductWorkDir(userConfigDir); err != nil {
 		log.Fatal(err)
 	}
-	
+
 	productWorkDir := filepath.Join(userConfigDir, "cache")
 	if err := utils.CreateProductWorkDir(productWorkDir); err != nil {
 		log.Fatal(err)
@@ -71,6 +71,15 @@ func Run(productName, productTitle, productVersion string) {
 	log.SetOutput(logFile)
 	log.Printf("starting %s %s with arguments %v\n", productTitle, productVersion, os.Args)
 	log.Printf("current platform is OS=%q Architecture=%q\n", runtime.GOOS, runtime.GOARCH)
+	log.Printf("proxy settings are HTTP_PROXY=%s HTTPS_PROXY=%s NO_PROXY=%s UseHttpProxyEnvironmentVariable is %v\n",
+		os.Getenv("HTTP_PROXY"), os.Getenv("HTTPS_PROXY"), os.Getenv("NO_PROXY"),
+		settings.UseHttpProxyEnvironmentVariable(),
+	)
+	if !settings.UseHttpProxyEnvironmentVariable() {
+		os.Setenv("HTTP_PROXY", "")
+		os.Setenv("HTTPS_PROXY", "")
+		os.Setenv("NO_PROXY", "")
+	}
 	flag.BoolVar(&showConsole, "showconsole", false, "show Java console")
 	flag.BoolVar(&showConsole, "showConsole", false, "show Java console")
 	flag.StringVar(&javaDir, "javadir", "", "Java folder that should be used for starting a Java Web Start application")
