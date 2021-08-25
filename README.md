@@ -53,7 +53,7 @@ The setup allows to specify some configuration options. These can be modified po
 | Parameter     | Meaning             | Example | Note |
 | ------------- | ------------------- | ------- | ---- |
 | /s | silent mode | `setup /s` | |
-| /d | specify installation folder | `setup /d=c:\my folder` | This must be the laat parameter on the command line |
+| /d | specify installation folder | `setup /d=c:\my folder` | This must be the last parameter on the command line |
 
 #### User install
 
