@@ -48,6 +48,11 @@ An appropriate Java version needs to be installed on the system for OWL to work.
 
 The setup allows to specify some configuration options. These can be modified post-installation by running **Modify** from the Control Panel or by choosing **Configure Open Web Launch** from the Start menu.
 
+#### Command Line Parameters
+
+| /s | silent mode | 'setup /s' |
+| /d | specify installation folder | 'setup /d=c:\my folder' |
+
 #### User install
 
 Run the setup for the current user only.
