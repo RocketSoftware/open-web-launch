@@ -50,10 +50,10 @@ The setup allows to specify some configuration options. These can be modified po
 
 #### Command Line Parameters
 
-| Parameter     | Meaning           | Example |
-| ------------- |-------------------| ------- |
-| /s | silent mode | 'setup /s' |
-| /d | specify installation folder | 'setup /d=c:\my folder' |
+| Parameter     | Meaning             | Example |
+| ------------- | ------------------- | ------- |
+| /s | silent mode | `setup /s` |
+| /d | specify installation folder | `setup /d=c:\my folder` |
 
 #### User install
 
