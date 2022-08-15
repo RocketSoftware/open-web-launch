@@ -6,7 +6,7 @@
 // assets/main.js
 // DO NOT EDIT!
 
-package gui
+package bootstrap
 
 import (
 	"github.com/elazarl/go-bindata-assetfs"

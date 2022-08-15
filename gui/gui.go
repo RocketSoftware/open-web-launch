@@ -1,6 +1,5 @@
 package gui
 
-//go:generate go-bindata-assetfs -pkg gui assets/...
 
 import (
 	"bytes"
