@@ -129,6 +129,15 @@ func (launcher *Launcher) Terminate() {
 	}
 }
 
+// Wait waits for the executed command to exit
+func (launcher *Launcher) Wait() (*os.ProcessState, error) {
+	if launcher.cmd == nil || launcher.cmd.Process == nil {
+		return nil, errors.New("process not running")
+	}
+
+	return launcher.cmd.Process.Wait()
+}
+
 func (launcher *Launcher) CheckPlatform() error {
 	if err := settings.EnsureJavaExecutableAvailability(); err != nil {
 		return errors.Wrap(err, "java executable wasn't found")
