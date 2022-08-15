@@ -2,6 +2,7 @@ package launcher
 
 import (
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -21,6 +22,7 @@ type Launcher interface {
 	UninstallByFilename(filename string, showGUI bool) error
 	UninstallByURL(url string, showGUI bool) error
 	SetLogFile(logFile string)
+	Wait() (*os.ProcessState, error)
 }
 
 type Options struct {
