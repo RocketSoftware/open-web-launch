@@ -299,6 +299,22 @@ func (launcher *Launcher) exec() error {
 	if launcher.gui.Closed() {
 		return errCancelled
 	}
+
+	if launcher.options != nil && launcher.options.StdoutHandler != nil {
+		pipe, err := cmd.StdoutPipe()
+		if err != nil {
+			return errors.Wrap(err, "failed to create stdout pipe to application")
+		}
+		go launcher.options.StdoutHandler(pipe)
+	}
+
+	if launcher.options != nil && launcher.options.StderrHandler != nil {
+		pipe, err := cmd.StderrPipe()
+		if err != nil {
+			return errors.Wrap(err, "failed to create stderr pipe to application")
+		}
+		go launcher.options.StderrHandler(pipe)
+	}
 	return cmd.Start()
 }
 
