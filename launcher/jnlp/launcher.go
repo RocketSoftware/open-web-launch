@@ -212,12 +212,16 @@ func (launcher *Launcher) getProperties() []Property {
 }
 
 func (launcher *Launcher) getJVMArgs() []string {
+	splitter := func(c rune) bool {
+		return c == ' '
+	}
+
 	var jvmArgs []string
 	relevantResources := launcher.getRelevantResources()
 	for _, resources := range relevantResources {
 		j2se := resources.getJ2SE()
-		if j2se != nil && j2se.JavaVMArgs != "" {
-			args := strings.Split(resources.J2SE.JavaVMArgs, " ")
+		if j2se != nil && strings.Trim(j2se.JavaVMArgs, " ") != "" {
+			args := strings.FieldsFunc(j2se.JavaVMArgs, splitter)
 			jvmArgs = append(jvmArgs, args...)
 		}
 	}
