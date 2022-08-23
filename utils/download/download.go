@@ -2,7 +2,6 @@ package download
 
 import (
 	"bytes"
-	"crypto/tls"
 	"fmt"
 	"io"
 	"net/http"
@@ -99,8 +98,4 @@ func GetLastModifiedTime(url string) (time.Time, error) {
 		return time.Time{}, err
 	}
 	return lastModifiedTime, nil
-}
-
-func init() {
-	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 }
