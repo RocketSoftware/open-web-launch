@@ -1,10 +1,12 @@
 package bootstrap
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -41,6 +43,8 @@ func Run(productName, productTitle, productVersion string) {
 			}
 		}
 	}
+
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	userConfigDir, err := os.UserConfigDir()
 
 	userConfigDir = filepath.Join(userConfigDir, "Rocket Software")
