@@ -272,6 +272,7 @@ func (launcher *Launcher) command() (*exec.Cmd, error) {
 	if splash := launcher.getSplashScreen(); splash != "" {
 		javaArgs = append(javaArgs, fmt.Sprintf("-splash:%s", splash))
 	}
+	javaArgs = append(javaArgs, launcher.getProxyArgs()...)
 	if jnlp.AppDescription != nil {
 		javaArgs = append(javaArgs, jnlp.AppDescription.MainClass)
 		for _, appArg := range jnlp.AppDescription.Arguments {
@@ -288,6 +289,55 @@ func (launcher *Launcher) command() (*exec.Cmd, error) {
 		utils.BreakAwayFromParent(cmd)
 	}
 	return cmd, nil
+}
+
+func (launcher *Launcher) getProxyArgs() []string {
+	args := []string{}
+	if !settings.UseHttpProxyEnvironmentVariable() {
+		return args
+	}
+
+	args = append(args, launcher.getHttpProxyArgs()...)
+	args = append(args, launcher.getHttpsProxyArgs()...)
+	return args
+}
+
+func (launcher *Launcher) getHttpProxyArgs() []string {
+	args := []string{}
+	httpProxy := os.Getenv("HTTP_PROXY")
+	uri, err := url.Parse(httpProxy)
+	if err != nil {
+		return args
+	}
+
+	if uri.Hostname() != "" {
+		args = append(args, fmt.Sprintf("-Dhttp.proxyHost=%s", uri.Hostname()))
+	}
+
+	if uri.Port() != "" {
+		args = append(args, fmt.Sprintf("-Dhttp.proxyPort=%s", uri.Port()))
+	}
+
+	return args
+}
+
+func (launcher *Launcher) getHttpsProxyArgs() []string {
+	args := []string{}
+	httpsProxy := os.Getenv("HTTPS_PROXY")
+	uri, err := url.Parse(httpsProxy)
+	if err != nil {
+		return args
+	}
+
+	if uri.Hostname() != "" {
+		args = append(args, fmt.Sprintf("-Dhttps.proxyHost=%s", uri.Hostname()))
+	}
+
+	if uri.Port() != "" {
+		args = append(args, fmt.Sprintf("-Dhttps.proxyPort=%s", uri.Port()))
+	}
+
+	return args
 }
 
 func (launcher *Launcher) exec() error {

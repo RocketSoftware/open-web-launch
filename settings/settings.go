@@ -244,6 +244,11 @@ func UseHttpProxyEnvironmentVariable() bool {
 	return useHttpProxyEnvironmentVariable
 }
 
+// SetUseHttpProxyEnvironmentVariable allows overriding the default determined by the OS
+func SetUseHttpProxyEnvironmentVariable(use bool) {
+	useHttpProxyEnvironmentVariable = use
+}
+
 func init() {
 	javaExecutable = getJavaExecutable()
 	jarSignerExecutable = getJARSignerExecutable()
