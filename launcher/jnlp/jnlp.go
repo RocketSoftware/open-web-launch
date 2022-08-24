@@ -7,6 +7,7 @@ import (
 	"net/url"
 
 	launcher_utils "github.com/rocketsoftware/open-web-launch/launcher/utils"
+	"github.com/rocketsoftware/open-web-launch/settings"
 	"github.com/rocketsoftware/open-web-launch/utils/log"
 )
 
@@ -30,8 +31,8 @@ type Resources struct {
 	JARs       []*JAR       `xml:"jar,omitempty"`
 	Properties []Property   `xml:"property,omitempty"`
 	Extensions []*Extension `xml:"extension,omitempty"`
-	J2SE       *J2SE        `xml:"j2se,omitempty"`
-	Java       *J2SE        `xml:"java,omitempty"` // synonym for j2se
+	J2SE       []J2SE       `xml:"j2se,omitempty"`
+	Java       []J2SE       `xml:"java,omitempty"` // synonym for j2se
 	NativeLibs []*NativeLib `xml:"nativelib,omitempty"`
 }
 
@@ -236,11 +237,27 @@ func (jnlp *JNLP) Title() string {
 }
 
 func (resources *Resources) getJ2SE() *J2SE {
-	if resources.J2SE != nil {
-		return resources.J2SE
+	for _, j2seIter := range resources.J2SE {
+		j2se := &j2seIter
+		if j2se.versionMatches() {
+			return j2se
+		}
 	}
-	if resources.Java != nil {
-		return resources.Java
+	for _, j2seIter := range resources.Java {
+		j2se := &j2seIter
+		if j2se.versionMatches() {
+			return j2se
+		}
 	}
+
 	return nil
+}
+
+func (j2se *J2SE) versionMatches() bool {
+	requiredVersion, err := settings.ParseJavaVersion(j2se.Version)
+	if err != nil {
+		return false
+	}
+
+	return settings.CurrentJavaVersionMatches(requiredVersion)
 }
