@@ -8,7 +8,8 @@ require (
 	github.com/go-ole/go-ole v1.2.4
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/pkg/errors v0.8.1
-	golang.org/x/image v0.0.0-20191009234506-e7c1f5e7dbb8
+	golang.org/x/image v0.5.0
 	golang.org/x/mobile v0.0.0-20191115022231-f0c40035f2ba
-	golang.org/x/sys v0.0.0-20191115151921-52ab43148777
+	golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f
+	howett.net/plist v1.0.0
 )
